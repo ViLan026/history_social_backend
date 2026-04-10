@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: history_social_backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/history_social1
+    driver-class-name: org.postgresql.Driver
+  
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+
+  config:
+    import: "classpath:application-secret.yaml"
+
+server:
+  port: 8080
+  servlet:
+    context-path: /history_social

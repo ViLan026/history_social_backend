@@ -3,6 +3,7 @@ package com.example.history_social_backend.modules.report.domain;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.example.history_social_backend.common.domain.BaseEntity;
 import com.example.history_social_backend.modules.post.domain.Post;
 import com.example.history_social_backend.modules.user.domain.User;
 
@@ -17,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Report {
+public class Report extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,11 +27,11 @@ public class Report {
 
     @ManyToOne
     @JoinColumn(name = "reporter_id", nullable = false)
-    User reporter;
+    UUID reporter;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
-    Post post;
+    UUID post;
 
     @Column(columnDefinition = "TEXT")
     String reason;
@@ -39,6 +40,4 @@ public class Report {
     @Column(nullable = false)
     ReportStatus status;
 
-    @Column(nullable = false)
-    LocalDateTime createdAt;
 }

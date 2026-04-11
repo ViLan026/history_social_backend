@@ -5,13 +5,12 @@ import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
-import com.example.history_social_backend.modules.post.domain.Post;
-import com.example.history_social_backend.modules.user.domain.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -38,15 +37,12 @@ public class CommentService {
 
     @Transactional
     public ApiResponse<CommentResponse> createComment(CommentRequest request) {
-        String principalName = SecurityContextHolder.getContext().getAuthentication().getName();
-        UUID authorId = UUID.fromString(principalName);
 
-        Post postRef = entityManager.getReference(Post.class, request.getPostId());
-        User authorRef = entityManager.getReference(User.class, authorId);
+        UUID authorId = SecurityUtils.getCurrentUserId();
 
         Comment comment = new Comment();
-        comment.setPost(postRef);
-        comment.setAuthor(authorRef);
+        comment.setPost(request.getPostId());
+        comment.setAuthor(authorId);
         comment.setContent(request.getContent());
 
         comment.validateContent();
@@ -57,8 +53,7 @@ public class CommentService {
         eventPublisher.publishEvent(new CommentCreatedEvent(
                 savedComment.getId(),
                 request.getPostId(),
-                authorId
-        ));
+                authorId));
 
         CommentResponse response = commentMapper.toResponse(savedComment);
         return ApiResponse.success("Comment created successfully", response);
@@ -83,11 +78,9 @@ public class CommentService {
             throw new AppException(ErrorCode.COMMENT_ALREADY_DELETED);
         }
 
-        UUID currentUserId = UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+        UUID authorId = SecurityUtils.getCurrentUserId();
 
-        boolean isAuthor = comment.getAuthor().getId().equals(currentUserId);
+        boolean isAuthor = comment.getAuthor().equals(authorId);
         boolean isAdmin = isCurrentUserAdmin();
 
         if (!isAuthor && !isAdmin) {

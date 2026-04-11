@@ -29,11 +29,11 @@ public class Comment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
-    Post post;
+    UUID post;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    User author;
+    UUID author;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;

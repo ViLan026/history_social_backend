@@ -1,6 +1,5 @@
 package com.example.history_social_backend.modules.onthisday.service;
 
-
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.modules.onthisday.dto.OnThisDayRequest;
@@ -26,10 +25,7 @@ public class OnThisDayService {
     private final OnThisDayRepository repository;
     private final OnThisDayMapper mapper;
 
-    /**
-     * FR-13: Public API - Lấy sự kiện ngày này năm xưa
-     * Lấy tháng/ngày từ server time (LocalDate.now())
-     */
+    // Lấy tháng/ngày từ server time (LocalDate.now())
     public List<OnThisDayResponse> getTodayEvents() {
         LocalDate now = LocalDate.now();
         int month = now.getMonthValue();
@@ -39,9 +35,7 @@ public class OnThisDayService {
         return mapper.toResponseList(events);
     }
 
-    /**
-     * FR-14: Admin - Tạo mới sự kiện
-     */
+    // Admin - Tạo mới sự kiện
     @Transactional
     public OnThisDayResponse create(OnThisDayRequest request) {
         OnThisDay entity = mapper.toEntity(request);
@@ -49,9 +43,7 @@ public class OnThisDayService {
         return mapper.toResponse(saved);
     }
 
-    /**
-     * FR-14: Admin - Cập nhật sự kiện
-     */
+    // Admin - Cập nhật sự kiện
     @Transactional
     public OnThisDayResponse update(UUID id, OnThisDayRequest request) {
         OnThisDay entity = repository.findById(id)
@@ -62,9 +54,7 @@ public class OnThisDayService {
         return mapper.toResponse(saved);
     }
 
-    /**
-     * FR-14: Admin - Xóa sự kiện
-     */
+    // Admin - Xóa sự kiện
     @Transactional
     public void delete(UUID id) {
         OnThisDay entity = repository.findById(id)
@@ -73,11 +63,9 @@ public class OnThisDayService {
         repository.delete(entity);
     }
 
-    /**
-     * FR-14: Admin - Lấy danh sách toàn bộ (có phân trang)
-     * Không có search keyword theo yêu cầu tối giản (có thể mở rộng sau)
-     */
+    // Admin - Lấy danh sách toàn bộ (có phân trang)
     public PageResponse<OnThisDayResponse> getAll(Pageable pageable) {
+        
         Page<OnThisDay> entityPage = repository.findAll(pageable);
         Page<OnThisDayResponse> responsePage = entityPage.map(mapper::toResponse);
         return PageResponse.from(responsePage);

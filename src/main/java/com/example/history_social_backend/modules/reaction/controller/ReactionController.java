@@ -35,7 +35,7 @@ public class ReactionController {
         return ApiResponse.success(stats);
     }
 
-    // GET /api/reactions/posts/{postId}?type=LIKE&page=0&size=20
+    // GET /api/v1/reactions/posts/{postId}?type=LIKE&page=0&size=20
     @GetMapping("/posts/{postId}")
     public ApiResponse<PageResponse<ReactionDetailResponse>> getReactionDetails(
             @PathVariable UUID postId,

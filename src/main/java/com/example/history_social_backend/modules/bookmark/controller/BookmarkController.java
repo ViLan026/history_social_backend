@@ -8,6 +8,7 @@ import com.example.history_social_backend.modules.bookmark.dto.response.Bookmark
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkResponse;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkStatusResponse;
 import com.example.history_social_backend.modules.bookmark.service.BookmarkService;
+import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkToggleResponse;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,59 +25,55 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookmarkController {
 
-    BookmarkService bookmarkService;
+	BookmarkService bookmarkService;
 
-    @PostMapping("/{postId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<BookmarkService.BookmarkToggleResponse> toggleBookmark(
-            @PathVariable UUID postId) {
+	@PostMapping("/{postId}")
+	@ResponseStatus(HttpStatus.OK)
+	public ApiResponse<BookmarkToggleResponse> toggleBookmark(
+			@PathVariable UUID postId) {
 
-        String email = SecurityUtils.getCurrentUserEmail();
+		String email = SecurityUtils.getCurrentUserEmail();
 
-        return ApiResponse.success(
-                bookmarkService.toggleBookmark(email, postId)
-        );
-    }
+		return ApiResponse.success(
+				bookmarkService.toggleBookmark(email, postId));
+	}
 
-    @GetMapping
-    public ApiResponse<PageResponse<BookmarkResponse>> getBookmarkedPosts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+	@GetMapping
+	public ApiResponse<PageResponse<BookmarkResponse>> getBookmarkedPosts(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size) {
 
-        String email = SecurityUtils.getCurrentUserEmail();
+		String email = SecurityUtils.getCurrentUserEmail();
 
-        return ApiResponse.success(
-                bookmarkService.getBookmarkedPosts(email, page, size)
-        );
-    }
+		return ApiResponse.success(
+				bookmarkService.getBookmarkedPosts(email, page, size));
+	}
 
-    @GetMapping("/check/{postId}")
-    public ApiResponse<BookmarkStatusResponse> checkBookmarkStatus(
-            @PathVariable UUID postId) {
+	@GetMapping("/check/{postId}")
+	public ApiResponse<BookmarkStatusResponse> checkBookmarkStatus(
+			@PathVariable UUID postId) {
 
-        String email = SecurityUtils.getCurrentUserEmail();
+		String email = SecurityUtils.getCurrentUserEmail();
 
-        boolean isBookmarked = bookmarkService.isBookmarked(email, postId);
+		boolean isBookmarked = bookmarkService.isBookmarked(email, postId);
 
-        return ApiResponse.success(
-                BookmarkStatusResponse.builder()
-                        .postId(postId)
-                        .bookmarked(isBookmarked)
-                        .build()
-        );
-    }
+		return ApiResponse.success(
+				BookmarkStatusResponse.builder()
+						.postId(postId)
+						.bookmarked(isBookmarked)
+						.build());
+	}
 
-    @GetMapping("/count")
-    public ApiResponse<BookmarkCountResponse> getBookmarkCount() {
+	@GetMapping("/count")
+	public ApiResponse<BookmarkCountResponse> getBookmarkCount() {
 
-        String email = SecurityUtils.getCurrentUserEmail();
+		String email = SecurityUtils.getCurrentUserEmail();
 
-        long count = bookmarkService.getBookmarkCount(email);
+		long count = bookmarkService.getBookmarkCount(email);
 
-        return ApiResponse.success(
-                BookmarkCountResponse.builder()
-                        .totalBookmarks(count)
-                        .build()
-        );
-    }
+		return ApiResponse.success(
+				BookmarkCountResponse.builder()
+						.totalBookmarks(count)
+						.build());
+	}
 }

@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.onthisday.controller;
 
+import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.onthisday.dto.OnThisDayRequest;
@@ -15,36 +16,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Controller cho module OnThisDay (FR-13 & FR-14)
- * - Public route: /api/onthisday/today (không cần auth)
- * - Admin routes: /api/admin/onthisday/* (yêu cầu ROLE_ADMIN)
- */
 @RestController
-@RequestMapping("/api")
+@RequestMapping(ApiPaths.API_V1)
 @RequiredArgsConstructor
 public class OnThisDayController {
 
     private final OnThisDayService service;
 
-    // ====================== PUBLIC API (FR-13) ======================
-
-    /**
-     * FR-13: Hiển thị sự kiện "Ngày này năm xưa" (public)
-     * Route: GET /api/onthisday/today
-     */
+    // GET /api/onthisday/today
     @GetMapping("/onthisday/today")
     public ApiResponse<List<OnThisDayResponse>> getTodayEvents() {
         List<OnThisDayResponse> data = service.getTodayEvents();
         return ApiResponse.success("Lấy sự kiện ngày này năm xưa thành công", data);
     }
 
-    // ====================== ADMIN API (FR-14) ======================
-
-    /**
-     * FR-14: Admin - Lấy danh sách toàn bộ sự kiện (phân trang)
-     * Route: GET /api/admin/onthisday
-     */
+    // GET /api/admin/onthisday
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/onthisday")
     public ApiResponse<PageResponse<OnThisDayResponse>> getAll(
@@ -54,10 +40,7 @@ public class OnThisDayController {
         return ApiResponse.success("Lấy danh sách sự kiện thành công", pageResponse);
     }
 
-    /**
-     * FR-14: Admin - Tạo mới sự kiện
-     * Route: POST /api/admin/onthisday
-     */
+    // Admin - Tạo mới sự kiện
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/onthisday")
     public ApiResponse<OnThisDayResponse> create(
@@ -67,10 +50,7 @@ public class OnThisDayController {
         return ApiResponse.success("Tạo sự kiện lịch sử thành công", response);
     }
 
-    /**
-     * FR-14: Admin - Cập nhật sự kiện
-     * Route: PUT /api/admin/onthisday/{id}
-     */
+    // Admin - Cập nhật sự kiện
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/admin/onthisday/{id}")
     public ApiResponse<OnThisDayResponse> update(
@@ -81,10 +61,7 @@ public class OnThisDayController {
         return ApiResponse.success("Cập nhật sự kiện thành công", response);
     }
 
-    /**
-     * FR-14: Admin - Xóa sự kiện
-     * Route: DELETE /api/admin/onthisday/{id}
-     */
+    // Admin - Xóa sự kiện
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/onthisday/{id}")
     public ApiResponse<Void> delete(@PathVariable UUID id) {

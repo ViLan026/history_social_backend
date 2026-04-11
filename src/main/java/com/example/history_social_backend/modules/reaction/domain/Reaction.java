@@ -1,10 +1,8 @@
 package com.example.history_social_backend.modules.reaction.domain;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.example.history_social_backend.modules.post.domain.Post;
-import com.example.history_social_backend.modules.user.domain.User;
+import com.example.history_social_backend.common.domain.BaseEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,25 +15,22 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Reaction {
+public class Reaction extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     UUID id;
 
-    @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
-    Post post;
+    UUID post;
 
-    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    User user;
+    UUID user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     ReactionType type;
-
-    @Column(nullable = false)
-    LocalDateTime createdAt;
 }
+
+

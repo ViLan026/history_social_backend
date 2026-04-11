@@ -16,10 +16,10 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-// tạo index cho các cột 
+// tạo index cho các cột
 @Table(name = "posts", indexes = {
-        @Index(name = "idx_post_author",  columnList = "author_id"),
-        @Index(name = "idx_post_status",  columnList = "status"),
+        @Index(name = "idx_post_author", columnList = "author_id"),
+        @Index(name = "idx_post_status", columnList = "status"),
         @Index(name = "idx_post_created", columnList = "created_at")
 })
 @SQLDelete(sql = "UPDATE posts SET deleted_at = NOW() WHERE id = ?")
@@ -70,13 +70,34 @@ public class Post extends BaseEntity {
 
     LocalDateTime deletedAt;
 
+    // --- CÁC HÀM QUẢN LÝ POST MEDIA ---
     public void addMedia(PostMedia media) {
-        media.setPost(this);
+        if (this.mediaList == null) {
+            this.mediaList = new ArrayList<>();
+        }
         this.mediaList.add(media);
+        media.setPost(this);
+    }
+
+    public void removeMedia(PostMedia media) {
+        if (this.mediaList != null) {
+            this.mediaList.remove(media);
+            media.setPost(null); // Cắt đứt quan hệ để Hibernate biết và tự xóa
+        }
     }
 
     public void addSource(PostSource source) {
-        source.setPost(this);
+        if (this.sources == null) {
+            this.sources = new HashSet<>();
+        }
         this.sources.add(source);
+        source.setPost(this);
+    }
+
+    public void removeSource(PostSource source) {
+        if (this.sources != null) {
+            this.sources.remove(source);
+            source.setPost(null); // Cắt đứt quan hệ
+        }
     }
 }

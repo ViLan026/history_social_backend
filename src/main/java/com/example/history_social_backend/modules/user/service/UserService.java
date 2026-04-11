@@ -10,6 +10,7 @@ import com.example.history_social_backend.modules.user.domain.User;
 import com.example.history_social_backend.modules.user.dto.request.ChangePasswordRequest;
 import com.example.history_social_backend.modules.user.dto.request.UserCreationRequest;
 import com.example.history_social_backend.modules.user.dto.request.UserUpdateRequest;
+import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserSummaryResponse;
 import com.example.history_social_backend.modules.user.mapper.UserMapper;
@@ -17,6 +18,7 @@ import com.example.history_social_backend.modules.user.repository.ProfileReposit
 import com.example.history_social_backend.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,8 +27,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -195,5 +200,18 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .map(User::getId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // Trả về Map để Module Reaction dễ dàng lấy thông tin theo UUID
+    public Map<UUID, UserReactionResponse> getUserReactionInfoMap(Set<UUID> userIds) {
+        List<User> users = userRepository.findAllById(userIds);
+
+        return users.stream().collect(Collectors.toMap(
+                User::getId,
+                user -> UserReactionResponse.builder()
+                        .id(user.getId())
+                        .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
+                        .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
+                        .build()));
     }
 }

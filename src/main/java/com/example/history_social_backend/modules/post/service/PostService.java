@@ -5,6 +5,7 @@ import com.example.history_social_backend.common.event.PostDeletedEvent;
 import com.example.history_social_backend.common.event.PostUpdatedEvent;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.media.internal.UploadResult;
 import com.example.history_social_backend.modules.media.service.CloudinaryService;
 import com.example.history_social_backend.modules.post.domain.*;
@@ -15,7 +16,6 @@ import com.example.history_social_backend.modules.post.dto.response.PostSummaryR
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostMediaRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
-import com.example.history_social_backend.modules.post.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,6 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final PostMediaRepository postMediaRepository;
-    private final TagRepository tagRepository;
     private final CloudinaryService cloudinaryService;
     private final PostMapper postMapper;
     private final ApplicationEventPublisher eventPublisher;
@@ -70,7 +69,9 @@ public class PostService {
     // flow: Upload file → Validate → Resolve Tag → Create Post → Attach relations →
     // Save → Publish event
 
-    public PostResponse createPost(PostCreationRequest request, List<MultipartFile> files, UUID authorId) {
+    public PostResponse createPost(PostCreationRequest request, List<MultipartFile> files) {
+
+        UUID authorId = SecurityUtils.getCurrentUserId();
         // Service tự quyết định folder structure
         String folderName = getPostFolderForUser(authorId);
 
@@ -123,8 +124,8 @@ public class PostService {
         // sources
         if (!CollectionUtils.isEmpty(request.getSources())) {
             request.getSources().stream()
-                    .map(postMapper::toSourceEntity)
-                    .forEach(post::addSource);
+                    .map(postMapper::toSourceEntity) // Chỉ 1 tham số nên dùng :: vô tư
+                    .forEach(post::addSource); // Add vào Post
         }
 
         // Resolve Tag
@@ -187,8 +188,10 @@ public class PostService {
     // ================= UPDATE =================
     // Flow: Upload → Transaction DB → After commit → delete file cũ → If fail →
     // rollback file mới
-    public PostResponse updatePost(UUID postId, PostUpdateRequest request, List<MultipartFile> newFiles,
-            UUID currentUserId) {
+    public PostResponse updatePost(UUID postId, PostUpdateRequest request, List<MultipartFile> newFiles) {
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
         Post post = postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
@@ -241,7 +244,7 @@ public class PostService {
             post.getMediaList().removeIf(m -> request.getRemoveMediaPublicIds().contains(m.getPublicId()));
         }
 
-        // Thêm media 
+        // Thêm media
         int nextOrder = post.getMediaList().size();
         for (int i = 0; i < newUploads.size(); i++) {
             UploadResult ur = newUploads.get(i);
@@ -392,20 +395,6 @@ public class PostService {
                 }
             });
         }, uploadExecutor);
-    }
-
-    private Set<Tag> resolveOrCreateTags(Set<String> tagNames) {
-        Set<Tag> existingTags = tagRepository.findByNameIn(tagNames);
-        Set<String> existingNames = existingTags.stream()
-                .map(Tag::getName).collect(Collectors.toSet());
-
-        Set<Tag> newTags = tagNames.stream()
-                .filter(name -> !existingNames.contains(name))
-                .map(name -> tagRepository.save(Tag.builder().name(name).build()))
-                .collect(Collectors.toSet());
-
-        existingTags.addAll(newTags);
-        return existingTags;
     }
 
     @PreDestroy

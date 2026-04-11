@@ -40,7 +40,8 @@ public interface PostMapper {
 
     TagResponse toTagResponse(Tag tag);
 
-    // MapStruct sẽ tự động gọi method này khi map từ Set<PostTag> sang Set<TagResponse>
+    // MapStruct sẽ tự động gọi method này khi map từ Set<PostTag> sang
+    // Set<TagResponse>
     default TagResponse postTagToTagResponse(PostTag postTag) {
         if (postTag == null || postTag.getTag() == null) {
             return null;
@@ -48,5 +49,8 @@ public interface PostMapper {
         return toTagResponse(postTag.getTag());
     }
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "post", ignore = true)
     PostSource toSourceEntity(PostSourceRequest request);
+
 }

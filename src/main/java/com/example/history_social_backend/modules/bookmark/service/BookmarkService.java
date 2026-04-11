@@ -5,6 +5,7 @@ import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.modules.bookmark.domain.Bookmark;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkResponse;
+import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkToggleResponse;
 import com.example.history_social_backend.modules.bookmark.mapper.BookmarkMapper;
 import com.example.history_social_backend.modules.bookmark.repository.BookmarkRepository;
 import com.example.history_social_backend.modules.post.service.PostService;
@@ -92,15 +93,5 @@ public class BookmarkService {
         UUID userId = userService.getUserIdByEmail(email);
 
         return bookmarkRepository.countByUserId(userId);
-    }
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class BookmarkToggleResponse {
-        String action;
-        boolean bookmarked;
-        String message;
     }
 }

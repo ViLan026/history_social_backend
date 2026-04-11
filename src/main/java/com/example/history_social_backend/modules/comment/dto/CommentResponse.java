@@ -13,10 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentResponse {
-    private UUID id;
-    private UUID postId;
-    private UUID authorId;
-    private String content;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    UUID id;
+    UUID post;
+    UUID author;
+    String content;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

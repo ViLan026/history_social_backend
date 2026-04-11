@@ -1,7 +1,5 @@
 package com.example.history_social_backend.modules.post.domain;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import com.example.history_social_backend.common.domain.BaseEntity;

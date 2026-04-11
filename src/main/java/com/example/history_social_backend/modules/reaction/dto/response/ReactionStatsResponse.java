@@ -1,4 +1,4 @@
-package com.example.history_social_backend.modules.reaction.dto;
+package com.example.history_social_backend.modules.reaction.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

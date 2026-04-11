@@ -7,4 +7,4 @@ public enum ReactionType {
     LIKE,
     LOVE,
     ANGRY
-}
+}   

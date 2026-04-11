@@ -1,4 +1,4 @@
-package com.example.history_social_backend.modules.reaction.dto;
+package com.example.history_social_backend.modules.reaction.dto.response;
 
 import com.example.history_social_backend.modules.reaction.domain.ReactionType;
 import lombok.*;
@@ -6,13 +6,15 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
 
-@Builder
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReactionRequest {
-    private UUID postId;
-    private ReactionType type;
+public class ReactionDetailResponse {
+    UUID userId;
+    String displayName;
+    String avatarUrl;
+    ReactionType type;
 }

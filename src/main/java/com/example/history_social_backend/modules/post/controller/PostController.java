@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.history_social_backend.core.security.SecurityUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,8 +34,8 @@ public class PostController {
             @RequestPart("post") @Valid PostCreationRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        UUID authorId = SecurityUtils.getCurrentUserId();
-        PostResponse response = postService.createPost(request, files, authorId);
+        
+        PostResponse response = postService.createPost(request, files);
 
         return ApiResponse.success(response);
     }
@@ -78,8 +77,7 @@ public class PostController {
             @RequestPart("post") @Valid PostUpdateRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-        PostResponse response = postService.updatePost(id, request, files, currentUserId);
+        PostResponse response = postService.updatePost(id, request, files);
         return ApiResponse.success(response);
     }
 

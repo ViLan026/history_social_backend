@@ -19,19 +19,12 @@ public class PostUpdateRequest {
 
     @Size(max = 500)
     String title;
-
     String content;
-
-    // @Size(max = 1000)
-    // String summary;
-
     PostStatus status;
-
     Set<String> tagNames;
 
     @Valid
     List<PostSourceRequest> sources;
-
-    /** publicId của các media cần xóa. */
+    
     List<String> removeMediaPublicIds;
 }

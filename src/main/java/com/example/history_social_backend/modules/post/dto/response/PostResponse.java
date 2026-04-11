@@ -24,7 +24,7 @@ public class PostResponse {
     PostStatus status;
     long viewCount;
     List<PostMediaResponse> mediaList;
-    List<PostSourceResponse> sources;
+    Set<PostSourceResponse> sources;
     Set<TagResponse> tags;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

@@ -32,14 +32,9 @@ public class Tag extends BaseEntity {
     String name;
 
     @Column(length = 300)
-    private String description;
+    String description;
 
     @Builder.Default
     @Column(name = "usage_count", nullable = false)
-    private Integer usageCount = 0;
-
-    @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<PostTag> postTags = new HashSet<>();
-
+    Integer usageCount = 0;
 }

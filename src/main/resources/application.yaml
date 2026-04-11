@@ -3,7 +3,7 @@ spring:
     name: history_social_backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/history_social1
+    url: jdbc:postgresql://localhost:5432/history_social
     driver-class-name: org.postgresql.Driver
   
   flyway:

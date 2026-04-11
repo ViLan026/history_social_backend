@@ -42,6 +42,12 @@ public enum ErrorCode {
     // Profile
     PROFILE_NOT_FOUND(2008, "Profile not found", HttpStatus.NOT_FOUND),
 
+    // Media Error Codes
+    MEDIA_FILE_EMPTY(4001, "File không được rỗng", HttpStatus.BAD_REQUEST),
+    MEDIA_UPLOAD_FAILED(4002, "Upload media thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
+    MEDIA_DELETE_FAILED(4003, "Xóa media thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
+    MEDIA_INVALID_PUBLIC_ID(4004, "PublicId không hợp lệ", HttpStatus.BAD_REQUEST),
+    MEDIA_FILE_TOO_LARGE(4005, "File vượt quá giới hạn cho phép", HttpStatus.BAD_REQUEST),
 
     // --------------- Modules.Post -------------------
     POST_NOT_FOUND(3000, "Bài viết không tồn tại", HttpStatus.NOT_FOUND),
@@ -55,22 +61,19 @@ public enum ErrorCode {
 
     TAG_NOT_FOUND(3007, "Tag không tồn tại", HttpStatus.NOT_FOUND),
 
-    
     // --------------- Modules.Comment -------------------
     COMMENT_NOT_FOUND(4001, "Không tìm thấy bình luận", HttpStatus.NOT_FOUND),
     COMMENT_ALREADY_DELETED(4002, "Bình luận đã bị xóa", HttpStatus.BAD_REQUEST),
-    INVALID_COMMENT_CONTENT(4003, "Nội dung bình luận không hợp lệ. Bình luận không được để trống hoặc chỉ chứa dấu câu", HttpStatus.BAD_REQUEST),
+    INVALID_COMMENT_CONTENT(4003,
+            "Nội dung bình luận không hợp lệ. Bình luận không được để trống hoặc chỉ chứa dấu câu",
+            HttpStatus.BAD_REQUEST),
     DELETE_COMMENT_FORBIDDEN(4004, "Bạn không có quyền xóa bình luận này", HttpStatus.FORBIDDEN),
-
 
     // --------------- Modules.Notification -------------------
     NOTIFICATION_NOT_FOUND(5001, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
 
-
     // --------------- Modules.OnThisDay -------------------
     ON_THIS_DAY_NOT_FOUND(6001, "Không tìm thấy sự kiện ngày này năm xưa", HttpStatus.NOT_FOUND),
-
-
 
     ;
 

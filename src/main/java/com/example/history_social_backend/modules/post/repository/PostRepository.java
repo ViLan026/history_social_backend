@@ -22,7 +22,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("""
             SELECT DISTINCT p FROM Post p
             LEFT JOIN FETCH p.mediaList
-            LEFT JOIN FETCH p.sources
             WHERE p.id = :id
             """)
     Optional<Post> findByIdWithDetails(@Param("id") UUID id);

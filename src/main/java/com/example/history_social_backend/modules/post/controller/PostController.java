@@ -83,15 +83,4 @@ public class PostController {
         return ApiResponse.success(response);
     }
 
-
-    // DELETE /api/v1/posts/{id}
-
-    // @DeleteMapping("/{id}")
-    // public ResponseEntity<ApiResponse<Void>> deletePost(
-    // @PathVariable UUID id) {
-
-    // UUID currentUserId = SecurityUtils.getCurrentUserId();
-    // postService.deletePost(id, currentUserId);
-    // return ResponseEntity.ok(ApiResponse.noContent());
-    // }
 }

@@ -5,9 +5,9 @@ import com.example.history_social_backend.common.event.PostDeletedEvent;
 import com.example.history_social_backend.common.event.PostUpdatedEvent;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.modules.media.internal.UploadResult;
 import com.example.history_social_backend.modules.media.service.CloudinaryService;
 import com.example.history_social_backend.modules.post.domain.*;
-import com.example.history_social_backend.modules.post.dto.internal.UploadResult;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
@@ -18,7 +18,9 @@ import com.example.history_social_backend.modules.post.repository.PostRepository
 import com.example.history_social_backend.modules.post.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,9 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PreDestroy;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,50 +53,53 @@ public class PostService {
     private final CloudinaryService cloudinaryService;
     private final PostMapper postMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final TagService tagService;
+
+    // Thread pool riêng cho upload (max 10 concurrent uploads)
+    private final ExecutorService uploadExecutor = Executors.newFixedThreadPool(10);
+
+    @Autowired
+    @Lazy
+    private PostService self;
 
     public boolean existsById(UUID id) {
         return postRepository.existsById(id);
     }
 
-    public PostResponse createPost(PostCreationRequest request,
-            List<MultipartFile> files,
-            UUID authorId) {
-        // Upload files lên Cloudinary TRƯỚC khi mở DB transaction
-        List<UploadResult> uploadResults = uploadFilesWithRollback(files);
+    // ================= CREATE =================
+    // flow: Upload file → Validate → Resolve Tag → Create Post → Attach relations →
+    // Save → Publish event
+
+    public PostResponse createPost(PostCreationRequest request, List<MultipartFile> files, UUID authorId) {
+        // Service tự quyết định folder structure
+        String folderName = getPostFolderForUser(authorId);
+
+        // 1. Upload files đa luồng lên Cloudinary
+        List<UploadResult> uploadResults = uploadFilesConcurrentlyWithRollback(files, folderName);
 
         try {
-            // Lưu vào DB trong transaction
-            Post savedPost = savePostWithinTransaction(request, uploadResults, authorId);
+            // 2. Lưu DB qua 'self' để giữ được @Transactional
+            Post savedPost = self.savePostWithinTransaction(request, uploadResults, authorId);
 
-            // Publish event (sau khi transaction commit)
+            // 3. Publish event
             eventPublisher.publishEvent(new PostCreatedEvent(
                     this, savedPost.getId(), authorId, savedPost.getTitle()));
 
             return postMapper.toPostResponse(savedPost);
 
         } catch (Exception e) {
-            // xóa các file đã upload trên Cloudinary nếu DB lỗi
-            log.warn("DB save failed after Cloudinary upload — compensating by deleting {} assets",
-                    uploadResults.size());
-
-            uploadResults.forEach(r -> {
-                try {
-                    cloudinaryService.deleteFile(r.getPublicId(), r.getResourceType());
-                } catch (Exception ce) {
-                    log.error("Compensation delete failed: {}", r.getPublicId(), ce);
-                }
-            });
+            // 4. Rollback file trên Cloudinary không đồng bộ (non-blocking)
+            log.warn("Lưu DB thất bại, tiến hành xóa bù trừ {} file đã upload", uploadResults.size());
+            CompletableFuture.runAsync(() -> rollbackUploadedFiles(uploadResults), uploadExecutor);
             throw e;
         }
     }
 
-    // Lưu bài viết trong transaction, trả về entity đã lưu (có ID) để publish event
-    // sau commit.
     @Transactional
-    protected Post savePostWithinTransaction(PostCreationRequest request,
-            List<UploadResult> uploadResults,
+    protected Post savePostWithinTransaction(PostCreationRequest request, List<UploadResult> uploadResults,
             UUID authorId) {
-        // Build Post entity
+
+        // Tạo Post (chưa save)
         Post post = Post.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -93,49 +107,61 @@ public class PostService {
                 .status(request.getStatus())
                 .build();
 
-        // Gắn media từ kết quả upload
+        // media
         for (int i = 0; i < uploadResults.size(); i++) {
             UploadResult ur = uploadResults.get(i);
             PostMedia media = PostMedia.builder()
                     .mediaUrl(ur.getMediaUrl())
                     .publicId(ur.getPublicId())
                     .resourceType(ur.getResourceType())
-                    .mediaType(cloudinaryService.resolveMediaType(ur.getFormat()))
+                    .mediaType(cloudinaryService.resolveMediaType(ur.getResourceType()))
                     .displayOrder(i)
                     .build();
             post.addMedia(media);
         }
 
-        // Gắn sources
+        // sources
         if (!CollectionUtils.isEmpty(request.getSources())) {
             request.getSources().stream()
                     .map(postMapper::toSourceEntity)
                     .forEach(post::addSource);
         }
 
-        // Resolve tags (tìm tag cũ hoặc tạo mới nếu chưa tồn tại)
+        // Resolve Tag
+        Set<Tag> tags = Collections.emptySet();
         if (!CollectionUtils.isEmpty(request.getTagNames())) {
-            Set<Tag> tags = resolveOrCreateTags(request.getTagNames());
-            tags.forEach(tag -> {
-                PostTag postTag = PostTag.builder()
-                        .id(new PostTagId(post.getId(), tag.getId()))
-                        .post(post)
-                        .tag(tag)
-                        .build();
-                post.getPostTags().add(postTag);
-            });
+            tags = tagService.resolveOrCreateTags(request.getTagNames());
         }
 
-        return postRepository.save(post);
+        // SAVE POST TRƯỚC (để có ID)
+        Post savedPost = postRepository.save(post);
+
+        // Tạo PostTag (KHÔNG set id thủ công)
+        for (Tag tag : tags) {
+            PostTag pt = PostTag.builder()
+                    .post(savedPost)
+                    .tag(tag)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            savedPost.getPostTags().add(pt);
+        }
+
+        // 7. Update usageCount
+        tagService.increaseUsageCount(tags);
+
+        return savedPost;
     }
 
+    // ================= READ =================
 
-    // READ
-
-    @Transactional(readOnly = true)
+    @Transactional
     public PostResponse getPostById(UUID id) {
         Post post = postRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        post.getSources().size();
+
         postRepository.incrementViewCount(id);
         return postMapper.toPostResponse(post);
     }
@@ -158,49 +184,64 @@ public class PostService {
                 .map(postMapper::toSummaryResponse);
     }
 
-    // UPDATE
-    // Cập nhật bài viết — hỗ trợ thêm file mới và xóa media cũ
-    public PostResponse updatePost(UUID postId,
-            PostUpdateRequest request,
-            List<MultipartFile> newFiles,
+    // ================= UPDATE =================
+    // Flow: Upload → Transaction DB → After commit → delete file cũ → If fail →
+    // rollback file mới
+    public PostResponse updatePost(UUID postId, PostUpdateRequest request, List<MultipartFile> newFiles,
             UUID currentUserId) {
         Post post = postRepository.findByIdWithDetails(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        // Kiểm tra quyền (chỉ tác giả mới được sửa)
         if (!post.getAuthorId().equals(currentUserId)) {
             throw new AppException(ErrorCode.POST_FORBIDDEN);
         }
 
+        String folderName = getPostFolderForUser(currentUserId);
+
         // Upload file mới trước transaction
-        List<UploadResult> newUploads = uploadFilesWithRollback(newFiles);
+        List<UploadResult> newUploads = uploadFilesConcurrentlyWithRollback(newFiles, folderName);
 
-        // Xóa media cũ trên Cloudinary nếu được yêu cầu
-        deleteRequestedMedia(request, post);
+        // Chuẩn bị danh sách file cần xóa
+        Map<String, String> filesToDelete = new HashMap<>();
+        if (!CollectionUtils.isEmpty(request.getRemoveMediaPublicIds())) {
+            post.getMediaList().stream()
+                    .filter(m -> request.getRemoveMediaPublicIds().contains(m.getPublicId()))
+                    .forEach(m -> filesToDelete.put(m.getPublicId(), m.getResourceType()));
+        }
 
-        // Lưu vào DB
-        Post updated = applyUpdateWithinTransaction(post, request, newUploads, currentUserId);
+        try {
+            Post updated = self.applyUpdateWithinTransaction(post, request, newUploads);
 
-        eventPublisher.publishEvent(new PostUpdatedEvent(
-                this, updated.getId(), currentUserId, "Post content updated"));
+            if (!filesToDelete.isEmpty()) {
+                deleteCloudinaryFiles(filesToDelete); // Gọi hàm batch delete
+            }
 
-        return postMapper.toPostResponse(updated);
+            eventPublisher.publishEvent(new PostUpdatedEvent(
+                    this, updated.getId(), currentUserId, "Post content updated"));
+
+            return postMapper.toPostResponse(updated);
+        } catch (Exception e) {
+            log.warn("Update DB thất bại, tiến hành dọn dẹp các file mới tải lên...");
+            CompletableFuture.runAsync(() -> rollbackUploadedFiles(newUploads), uploadExecutor);
+            throw e;
+        }
     }
 
     @Transactional
-    protected Post applyUpdateWithinTransaction(Post post,
-            PostUpdateRequest request,
-            List<UploadResult> newUploads,
-            UUID updatedBy) {
+    protected Post applyUpdateWithinTransaction(Post post, PostUpdateRequest request, List<UploadResult> newUploads) {
         if (request.getTitle() != null)
             post.setTitle(request.getTitle());
         if (request.getContent() != null)
             post.setContent(request.getContent());
-        // if (request.getSummary() != null) post.setSummary(request.getSummary());
         if (request.getStatus() != null)
             post.setStatus(request.getStatus());
 
-        // Thêm media mới
+        // Xóa media TRONG transaction
+        if (!CollectionUtils.isEmpty(request.getRemoveMediaPublicIds())) {
+            post.getMediaList().removeIf(m -> request.getRemoveMediaPublicIds().contains(m.getPublicId()));
+        }
+
+        // Thêm media 
         int nextOrder = post.getMediaList().size();
         for (int i = 0; i < newUploads.size(); i++) {
             UploadResult ur = newUploads.get(i);
@@ -208,36 +249,46 @@ public class PostService {
                     .mediaUrl(ur.getMediaUrl())
                     .publicId(ur.getPublicId())
                     .resourceType(ur.getResourceType())
-                    .mediaType(cloudinaryService.resolveMediaType(ur.getFormat()))
+                    .mediaType(cloudinaryService.resolveMediaType(ur.getResourceType())) // ✅ FIX
                     .displayOrder(nextOrder + i)
                     .build();
             post.addMedia(media);
         }
 
-        // Cập nhật tags nếu được gửi lên
+        // Update Tag (FIX CHUẨN)
         if (request.getTagNames() != null) {
+
             post.getPostTags().clear();
-            Set<Tag> tags = resolveOrCreateTags(request.getTagNames());
-            tags.forEach(tag -> post.getPostTags().add(
-                    PostTag.builder()
-                            .id(new PostTagId(post.getId(), tag.getId()))
-                            .post(post).tag(tag).build()));
+
+            Set<Tag> tags = tagService.resolveOrCreateTags(request.getTagNames());
+
+            for (Tag tag : tags) {
+                PostTag pt = PostTag.builder()
+                        .post(post)
+                        .tag(tag)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+
+                post.getPostTags().add(pt);
+            }
+
+            tagService.increaseUsageCount(tags);
         }
 
-        // Cập nhật sources nếu được gửi lên
+        // Update sources
         if (request.getSources() != null) {
             post.getSources().clear();
+
             request.getSources().stream()
                     .map(postMapper::toSourceEntity)
                     .forEach(post::addSource);
         }
 
-        return postRepository.save(post);
+        return post;
     }
 
-    // DELETE
+    // ================= DELETE =================
 
-    // Xóa bài viết — dọn media trên Cloudinary TRƯỚC khi xóa DB.
     @Transactional
     public void deletePost(UUID postId, UUID currentUserId) {
         Post post = postRepository.findById(postId)
@@ -247,74 +298,102 @@ public class PostService {
             throw new AppException(ErrorCode.POST_FORBIDDEN);
         }
 
-        // Xóa media trên Cloudinary
-        // log lỗi nhưng không rollback để tránh data zombie trong DB
         List<PostMedia> mediaList = postMediaRepository.findByPostIdOrderByDisplayOrder(postId);
-        mediaList.forEach(media -> {
-            try {
-                cloudinaryService.deleteFile(media.getPublicId(), media.getResourceType());
-                log.debug("Deleted Cloudinary asset: {}", media.getPublicId());
-            } catch (AppException e) {
-                log.warn("Failed to delete Cloudinary asset {}: {}", media.getPublicId(), e.getMessage());
-                // Không throw — tiếp tục xóa file còn lại và DB record
-            }
-        });
 
-        // Xóa mềm post trong DB (cascade xóa media, source, tag records)
-        postRepository.delete(post); // trigger @SQLDelete → set deleted_at
+        postRepository.delete(post);
 
-        // Publish event
+        // Dùng Batch Delete
+        CompletableFuture.runAsync(() -> {
+            Map<String, List<String>> groupedByType = mediaList.stream()
+                    .collect(Collectors.groupingBy(
+                            PostMedia::getResourceType,
+                            Collectors.mapping(PostMedia::getPublicId, Collectors.toList())));
+
+            groupedByType.forEach((resourceType, publicIds) -> {
+                try {
+                    cloudinaryService.deleteFiles(publicIds, resourceType);
+                    log.debug("Batch deleted Cloudinary assets type: {}", resourceType);
+                } catch (Exception e) {
+                    log.warn("Failed to batch delete type {}: {}", resourceType, e.getMessage());
+                }
+            });
+        }, uploadExecutor);
+
         eventPublisher.publishEvent(new PostDeletedEvent(this, postId, currentUserId));
-
         log.info("Post deleted: postId={}, by={}", postId, currentUserId);
     }
 
-    // Private helpers
+    // ================= PRIVATE HELPERS =================
 
-    // Upload danh sách file, trả về list UploadResult.
-    // Nếu một file thất bại, rollback toàn bộ file đã upload thành công.
-    private List<UploadResult> uploadFilesWithRollback(List<MultipartFile> files) {
+    private List<UploadResult> uploadFilesConcurrentlyWithRollback(List<MultipartFile> files, String folderName) {
         if (CollectionUtils.isEmpty(files))
             return List.of();
 
-        List<UploadResult> results = new java.util.ArrayList<>();
-        for (MultipartFile file : files) {
-            try {
-                results.add(cloudinaryService.uploadFile(file));
-            } catch (AppException e) {
-                // Rollback các file đã upload thành công
-                for (UploadResult r : results) {
-                    try {
-                        cloudinaryService.deleteFile(
-                                r.getPublicId(),
-                                r.getResourceType());
-                    } catch (Exception ce) {
-                        log.error("CRITICAL: rollback delete failed, leaked file publicId={}", r.getPublicId(), ce);
-                    }
-                }
-            }
+        List<CompletableFuture<UploadResult>> futures = files.stream()
+                .map(file -> CompletableFuture.supplyAsync(
+                        () -> cloudinaryService.uploadFile(file, folderName),
+                        uploadExecutor // Dùng thread pool riêng
+                ))
+                .toList();
+
+        try {
+            return futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+        } catch (Exception e) {
+            List<UploadResult> successfulUploads = futures.stream()
+                    .filter(f -> f.isDone() && !f.isCompletedExceptionally())
+                    .map(CompletableFuture::join)
+                    .toList();
+
+            log.error("Một số file tải lên bị lỗi. Thực hiện rollback {} file đã tải lên trước đó.",
+                    successfulUploads.size());
+            rollbackUploadedFiles(successfulUploads);
+
+            throw new AppException(ErrorCode.UPLOAD_FAILED);
         }
-        return results;
     }
 
-    // Xóa media bị đánh dấu trong UpdateRequest.
-    private void deleteRequestedMedia(PostUpdateRequest request, Post post) {
-        if (CollectionUtils.isEmpty(request.getRemoveMediaPublicIds()))
+    // Dùng Batch Delete thay vì vòng lặp For
+    private void rollbackUploadedFiles(List<UploadResult> uploadedFiles) {
+        if (CollectionUtils.isEmpty(uploadedFiles))
             return;
 
-        request.getRemoveMediaPublicIds().forEach(publicId -> {
-            cloudinaryService.deleteFile(
-                    publicId,
-                    post.getMediaList().stream()
-                            .filter(m -> m.getPublicId().equals(publicId))
-                            .map(PostMedia::getResourceType)
-                            .findFirst()
-                            .orElseThrow(() -> new AppException(ErrorCode.DELETE_MEDIA_FAILED)));
-            post.getMediaList().removeIf(m -> m.getPublicId().equals(publicId));
+        Map<String, List<String>> groupedByType = uploadedFiles.stream()
+                .collect(Collectors.groupingBy(
+                        UploadResult::getResourceType,
+                        Collectors.mapping(UploadResult::getPublicId, Collectors.toList())));
+
+        groupedByType.forEach((type, ids) -> {
+            try {
+                cloudinaryService.deleteFiles(ids, type);
+            } catch (Exception ce) {
+                log.error("CRITICAL: rollback batch delete failed for type {}: {}", type, ce.getMessage());
+            }
         });
     }
 
-    // Tìm tag theo tên, tạo mới nếu chưa tồn tại (upsert).
+    // Chỉ xóa file trên Cloudinary, KHÔNG touch entity
+    // Nhận Map<PublicId, ResourceType> và dùng Batch Delete
+    private void deleteCloudinaryFiles(Map<String, String> filesToDelete) {
+        if (CollectionUtils.isEmpty(filesToDelete))
+            return;
+
+        CompletableFuture.runAsync(() -> {
+            Map<String, List<String>> groupedByType = filesToDelete.entrySet().stream()
+                    .collect(Collectors.groupingBy(
+                            Map.Entry::getValue,
+                            Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
+
+            groupedByType.forEach((type, ids) -> {
+                try {
+                    cloudinaryService.deleteFiles(ids, type);
+                    log.debug("Batch deleted Cloudinary files type {}: {}", type, ids);
+                } catch (Exception e) {
+                    log.warn("Failed to batch delete type {}: {}", type, e.getMessage());
+                }
+            });
+        }, uploadExecutor);
+    }
+
     private Set<Tag> resolveOrCreateTags(Set<String> tagNames) {
         Set<Tag> existingTags = tagRepository.findByNameIn(tagNames);
         Set<String> existingNames = existingTags.stream()
@@ -327,5 +406,15 @@ public class PostService {
 
         existingTags.addAll(newTags);
         return existingTags;
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        uploadExecutor.shutdown();
+        log.info("Upload executor shutdown");
+    }
+
+    private String getPostFolderForUser(UUID userId) {
+        return "history_social" + "posts/" + userId.toString();
     }
 }

@@ -3,6 +3,7 @@ package com.example.history_social_backend.modules.bookmark.service;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.bookmark.domain.Bookmark;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkResponse;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkToggleResponse;
@@ -31,12 +32,11 @@ public class BookmarkService {
     BookmarkRepository bookmarkRepository;
     PostService postService;
     BookmarkMapper bookmarkMapper;
-    UserService userService;
 
     @Transactional
-    public BookmarkToggleResponse toggleBookmark(String email, UUID postId) {
+    public BookmarkToggleResponse toggleBookmark(UUID postId) {
 
-        UUID userId = userService.getUserIdByEmail(email);
+        UUID userId = SecurityUtils.getCurrentUserId();
 
         // chỉ check tồn tại
         if (!postService.existsById(postId)) {
@@ -69,8 +69,8 @@ public class BookmarkService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<BookmarkResponse> getBookmarkedPosts(String email, int page, int size) {
-        UUID userId = userService.getUserIdByEmail(email);
+    public PageResponse<BookmarkResponse> getBookmarkedPosts(int page, int size) {
+        UUID userId = SecurityUtils.getCurrentUserId();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
@@ -82,15 +82,15 @@ public class BookmarkService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isBookmarked(String email, UUID postId) {
-        UUID userId = userService.getUserIdByEmail(email);
+    public boolean isBookmarked(UUID postId) {
+        UUID userId = SecurityUtils.getCurrentUserId();
 
         return bookmarkRepository.existsByUserIdAndPostId(userId, postId);
     }
 
     @Transactional(readOnly = true)
-    public long getBookmarkCount(String email) {
-        UUID userId = userService.getUserIdByEmail(email);
+    public long getBookmarkCount() {
+        UUID userId = SecurityUtils.getCurrentUserId();
 
         return bookmarkRepository.countByUserId(userId);
     }

@@ -19,6 +19,7 @@ public class PostSummaryResponse {
     String title;
     UUID authorId;
     PostStatus status;
+    String content;
     long viewCount;
     String thumbnailUrl; // URL ảnh đại diện (media đầu tiên)
     Set<TagResponse> tags;

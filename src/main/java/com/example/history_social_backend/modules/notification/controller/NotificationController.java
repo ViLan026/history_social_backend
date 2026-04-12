@@ -23,52 +23,39 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    /**
-     * FR-21: Lấy danh sách thông báo của user hiện tại (phân trang, mới nhất trước)
-     */
     @GetMapping
     public ApiResponse<PageResponse<NotificationResponse>> getMyNotifications(
-            @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
-            Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
 
         UUID currentUserId = UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+                SecurityContextHolder.getContext().getAuthentication().getName());
 
         Page<NotificationResponse> page = notificationService.getNotifications(currentUserId, pageable);
         return ApiResponse.success(PageResponse.from(page));
     }
 
-    /**
-     * Đánh dấu 1 thông báo đã đọc
-     */
+    // Đánh dấu 1 thông báo đã đọc
     @PutMapping("/{notificationId}/read")
     public ApiResponse<Void> markAsRead(@PathVariable UUID notificationId) {
         notificationService.markAsRead(notificationId);
         return ApiResponse.success("Notification marked as read");
     }
 
-    /**
-     * Đánh dấu TẤT CẢ thông báo đã đọc
-     */
+    // Đánh dấu TẤT CẢ thông báo đã đọc
     @PutMapping("/read-all")
     public ApiResponse<Void> markAllAsRead() {
         notificationService.markAllAsRead();
         return ApiResponse.success("All notifications marked as read");
     }
 
-    /**
-     * Lấy số lượng thông báo chưa đọc
-     */
+    // Lấy số lượng thông báo chưa đọc
     @GetMapping("/unread-count")
     public ApiResponse<Long> getUnreadCount() {
         long count = notificationService.getUnreadCount();
         return ApiResponse.success(count);
     }
 
-    /**
-     * FR-22: API Admin - Gửi thông báo hệ thống (đến 1 user hoặc tất cả)
-     */
+    // API Admin - Gửi thông báo hệ thống (đến 1 user hoặc tất cả)
     @PostMapping("/system")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<Void> sendSystemNotification(@RequestBody SystemNotificationRequest request) {

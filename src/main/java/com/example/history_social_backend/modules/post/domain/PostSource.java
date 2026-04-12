@@ -31,7 +31,7 @@ public class PostSource {
     String url;                 // URL nếu là nguồn online
 
     @Column(length = 300)
-    String author;              // tác giả tài liệu
+    String authorName;              // tác giả tài liệu
 
     @Column(name = "published_year")
     Integer publishedYear;

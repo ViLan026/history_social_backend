@@ -15,22 +15,20 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Reaction extends BaseEntity{
+public class Reaction extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     UUID id;
 
-    @JoinColumn(name = "post_id", nullable = false)
-    UUID post;
+    @Column(name = "post_id", nullable = false)
+    UUID postId;
 
-    @JoinColumn(name = "user_id", nullable = false)
-    UUID user;
+    @Column(name = "user_id", nullable = false)
+    UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     ReactionType type;
 }
-
-

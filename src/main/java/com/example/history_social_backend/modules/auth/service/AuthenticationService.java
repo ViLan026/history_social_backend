@@ -2,7 +2,6 @@ package com.example.history_social_backend.modules.auth.service;
 
 import java.text.ParseException;
 import java.util.Date;
-import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -95,7 +94,7 @@ public class AuthenticationService {
 
         RefreshToken entity = RefreshToken.builder()
                 .id(jti)
-                .userId(user.getId().toString())
+                .userId(user.getId())
                 .expiryTime(expiry)
                 .revoked(false)      // token chưa bị thu hồi (còn dùng được)
                 .build();
@@ -136,7 +135,7 @@ public class AuthenticationService {
             stored.setRevoked(true);
             refreshTokenRepository.save(stored);
 
-            User user = userService.findById(UUID.fromString(stored.getUserId()));
+            User user = userService.findById(stored.getUserId());
 
             String newAccess = jwtService.generateAccessToken(user);
             String newRefresh = jwtService.generateRefreshToken(user);

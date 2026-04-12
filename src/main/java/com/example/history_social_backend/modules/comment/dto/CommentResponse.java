@@ -14,8 +14,8 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentResponse {
     UUID id;
-    UUID post;
-    UUID author;
+    UUID postId;
+    UUID authorId;
     String content;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

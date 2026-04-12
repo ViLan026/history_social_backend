@@ -49,7 +49,6 @@ public class CloudinaryService {
             uploadParams.put("use_filename", true);
             uploadParams.put("unique_filename", true);
 
-            // THÊM DÒNG NÀY: Ép timeout 30 giây (30000 ms). Quá 30s không xong là báo lỗi ngay, không cho Postman treo!
             uploadParams.put("timeout", 30000);
 
             Map<String, Object> uploadResult;

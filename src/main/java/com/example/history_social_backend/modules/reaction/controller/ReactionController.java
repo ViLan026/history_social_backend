@@ -23,9 +23,9 @@ public class ReactionController {
 
     // bật, tắt, thay đổi reaction
     @PostMapping
-    public ApiResponse<Void> toggleReaction(@RequestBody ReactionRequest request) {
-        reactionService.toggleReaction(request);
-        return ApiResponse.success("Reaction toggled successfully");
+    public ApiResponse<ReactionType> toggleReaction(@RequestBody ReactionRequest request) {
+
+        return ApiResponse.success("Reaction toggled successfully", reactionService.toggleReaction(request));
     }
 
     // Lấy số lượng reaction
@@ -35,7 +35,6 @@ public class ReactionController {
         return ApiResponse.success(stats);
     }
 
-    // GET /api/v1/reactions/posts/{postId}?type=LIKE&page=0&size=20
     @GetMapping("/posts/{postId}")
     public ApiResponse<PageResponse<ReactionDetailResponse>> getReactionDetails(
             @PathVariable UUID postId,

@@ -2,7 +2,10 @@ package com.example.history_social_backend.modules.auth.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.util.Date;
+import java.util.UUID;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
 
@@ -13,17 +16,18 @@ import com.example.history_social_backend.common.domain.BaseEntity;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RefreshToken extends BaseEntity {
 
     @Id
-    private String id; // jti(JWD ID) của JWT
+    String id; // jti(JWD ID) của JWT
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    UUID userId;
 
     @Column(name = "expiry_time", nullable = false)
-    private Date expiryTime;   // Thời gian hết hạn của refresh token
+    Date expiryTime;   // Thời gian hết hạn của refresh token
 
     @Column(nullable = false)
-    private boolean revoked;  // Trạng thái của refresh token (đã bị thu hồi hay chưa)
+    boolean revoked;  // Trạng thái của refresh token (đã bị thu hồi hay chưa)
 }

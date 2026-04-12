@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostTag {
 
@@ -30,4 +29,15 @@ public class PostTag {
     Tag tag;
 
     LocalDateTime createdAt;
+
+    private PostTag(Post post, Tag tag) {
+        this.post = post;
+        this.tag = tag;
+        this.id = new PostTagId(post.getId(), tag.getId());
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public static PostTag of(Post post, Tag tag) {
+        return new PostTag(post, tag);
+    }
 }

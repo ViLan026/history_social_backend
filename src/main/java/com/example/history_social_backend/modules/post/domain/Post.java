@@ -38,7 +38,7 @@ public class Post extends BaseEntity {
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     UUID id;
 
-    @JoinColumn(name = "author_id", nullable = false)
+    @Column(name = "author_id", nullable = false)
     UUID authorId;
 
     @Column(nullable = false, length = 500)

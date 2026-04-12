@@ -29,19 +29,16 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-    
-    // 1. Inject Mapper vào đây
+
     private final NotificationMapper notificationMapper;
 
     @PersistenceContext
     private final EntityManager entityManager;
 
-    /**
-     * Tạo thông báo tương tác (gọi từ EventListener)
-     */
+    // Tạo thông báo tương tác (gọi từ EventListener)
     @Transactional
     public void createInteractionNotification(UUID actorId, UUID recipientId,
-                                              UUID referenceId, NotificationType type, String content) {
+            UUID referenceId, NotificationType type, String content) {
         if (actorId.equals(recipientId)) {
             return; // Self-interaction
         }
@@ -57,9 +54,7 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    /**
-     * FR-22: Tạo thông báo hệ thống (chỉ ADMIN)
-     */
+    // Tạo thông báo hệ thống (chỉ ADMIN)
     @Transactional
     public void createSystemNotification(SystemNotificationRequest request) {
         if (!isCurrentUserAdmin()) {
@@ -73,7 +68,8 @@ public class NotificationService {
         } else {
             // Gửi cho TẤT CẢ user
             List<User> allUsers = userRepository.findAll();
-            if (allUsers.isEmpty()) return;
+            if (allUsers.isEmpty())
+                return;
 
             List<Notification> notifications = allUsers.stream().map(user -> {
                 Notification n = notificationMapper.toSystemNotification(request);
@@ -85,21 +81,16 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Lấy danh sách thông báo của user hiện tại (phân trang)
-     */
+    // Lấy danh sách thông báo của user hiện tại (phân trang)
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getNotifications(UUID recipientId, Pageable pageable) {
         Page<Notification> page = notificationRepository
                 .findByRecipientIdOrderByCreatedAtDesc(recipientId, pageable);
 
-        // 2. Sử dụng mapper thay vì hàm thủ công
         return page.map(notificationMapper::toResponse);
     }
 
-    /**
-     * Đánh dấu 1 thông báo đã đọc
-     */
+    // Đánh dấu 1 thông báo đã đọc
     @Transactional
     public void markAsRead(UUID notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
@@ -114,18 +105,14 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    /**
-     * Đánh dấu TẤT CẢ thông báo đã đọc (bulk update)
-     */
+    // Đánh dấu TẤT CẢ thông báo đã đọc (bulk update)
     @Transactional
     public void markAllAsRead() {
         UUID currentUserId = getCurrentUserId();
         notificationRepository.markAllAsRead(currentUserId);
     }
 
-    /**
-     * Đếm số thông báo chưa đọc
-     */
+    // Đếm số thông báo chưa đọc
     @Transactional(readOnly = true)
     public long getUnreadCount() {
         UUID currentUserId = getCurrentUserId();
@@ -134,8 +121,7 @@ public class NotificationService {
 
     private UUID getCurrentUserId() {
         return UUID.fromString(
-                SecurityContextHolder.getContext().getAuthentication().getName()
-        );
+                SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     private boolean isCurrentUserAdmin() {

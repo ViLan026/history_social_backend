@@ -32,10 +32,8 @@ public class BookmarkController {
 	public ApiResponse<BookmarkToggleResponse> toggleBookmark(
 			@PathVariable UUID postId) {
 
-		String email = SecurityUtils.getCurrentUserEmail();
-
 		return ApiResponse.success(
-				bookmarkService.toggleBookmark(email, postId));
+				bookmarkService.toggleBookmark( postId));
 	}
 
 	@GetMapping
@@ -43,19 +41,15 @@ public class BookmarkController {
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
 
-		String email = SecurityUtils.getCurrentUserEmail();
-
 		return ApiResponse.success(
-				bookmarkService.getBookmarkedPosts(email, page, size));
+				bookmarkService.getBookmarkedPosts(page, size));
 	}
 
 	@GetMapping("/check/{postId}")
 	public ApiResponse<BookmarkStatusResponse> checkBookmarkStatus(
 			@PathVariable UUID postId) {
 
-		String email = SecurityUtils.getCurrentUserEmail();
-
-		boolean isBookmarked = bookmarkService.isBookmarked(email, postId);
+		boolean isBookmarked = bookmarkService.isBookmarked(postId);
 
 		return ApiResponse.success(
 				BookmarkStatusResponse.builder()
@@ -67,9 +61,7 @@ public class BookmarkController {
 	@GetMapping("/count")
 	public ApiResponse<BookmarkCountResponse> getBookmarkCount() {
 
-		String email = SecurityUtils.getCurrentUserEmail();
-
-		long count = bookmarkService.getBookmarkCount(email);
+		long count = bookmarkService.getBookmarkCount();
 
 		return ApiResponse.success(
 				BookmarkCountResponse.builder()

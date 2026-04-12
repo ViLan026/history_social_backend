@@ -1,11 +1,8 @@
 package com.example.history_social_backend.modules.report.domain;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
-import com.example.history_social_backend.modules.post.domain.Post;
-import com.example.history_social_backend.modules.user.domain.User;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,13 +22,11 @@ public class Report extends BaseEntity{
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     UUID id;
 
-    @ManyToOne
     @JoinColumn(name = "reporter_id", nullable = false)
-    UUID reporter;
+    UUID reporterId;
 
-    @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
-    UUID post;
+    UUID postId;
 
     @Column(columnDefinition = "TEXT")
     String reason;

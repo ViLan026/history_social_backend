@@ -41,8 +41,8 @@ public class CommentService {
         UUID authorId = SecurityUtils.getCurrentUserId();
 
         Comment comment = new Comment();
-        comment.setPost(request.getPostId());
-        comment.setAuthor(authorId);
+        comment.setPostId(request.getPostId());
+        comment.setAuthorId(authorId);
         comment.setContent(request.getContent());
 
         comment.validateContent();
@@ -80,7 +80,7 @@ public class CommentService {
 
         UUID authorId = SecurityUtils.getCurrentUserId();
 
-        boolean isAuthor = comment.getAuthor().equals(authorId);
+        boolean isAuthor = comment.getAuthorId().equals(authorId);
         boolean isAdmin = isCurrentUserAdmin();
 
         if (!isAuthor && !isAdmin) {

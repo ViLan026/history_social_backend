@@ -7,11 +7,10 @@ import java.util.List;
 
 @Builder
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReactionStatsResponse {
-    private long totalReactions;
-    private List<ReactionCount> counts;
+    long totalReactions;
+    List<ReactionCount> counts;
 }

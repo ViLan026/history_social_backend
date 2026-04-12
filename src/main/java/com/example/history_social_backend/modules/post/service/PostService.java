@@ -30,8 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PreDestroy;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,15 +78,10 @@ public class PostService {
         // 1. Upload files đa luồng lên Cloudinary
         List<UploadResult> uploadResults = uploadFilesConcurrentlyWithRollback(files, folderName);
 
+        Post savedPost;
         try {
             // 2. Lưu DB qua 'self' để giữ được @Transactional
-            Post savedPost = self.savePostWithinTransaction(request, uploadResults, authorId);
-
-            // 3. Publish event
-            eventPublisher.publishEvent(new PostCreatedEvent(
-                    this, savedPost.getId(), authorId, savedPost.getTitle()));
-
-            return postMapper.toPostResponse(savedPost);
+            savedPost = self.savePostWithinTransaction(request, uploadResults, authorId);
 
         } catch (Exception e) {
             // 4. Rollback file trên Cloudinary không đồng bộ (non-blocking)
@@ -94,10 +89,16 @@ public class PostService {
             CompletableFuture.runAsync(() -> rollbackUploadedFiles(uploadResults), uploadExecutor);
             throw e;
         }
+
+        // 3. Publish event
+        eventPublisher.publishEvent(new PostCreatedEvent(
+                this, savedPost.getId(), authorId, savedPost.getTitle()));
+
+        return postMapper.toPostResponse(savedPost);
     }
 
     @Transactional
-    protected Post savePostWithinTransaction(PostCreationRequest request, List<UploadResult> uploadResults,
+    public Post savePostWithinTransaction(PostCreationRequest request, List<UploadResult> uploadResults,
             UUID authorId) {
 
         // Tạo Post (chưa save)
@@ -139,12 +140,7 @@ public class PostService {
 
         // Tạo PostTag (KHÔNG set id thủ công)
         for (Tag tag : tags) {
-            PostTag pt = PostTag.builder()
-                    .post(savedPost)
-                    .tag(tag)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-
+            PostTag pt = PostTag.of(savedPost, tag);
             savedPost.getPostTags().add(pt);
         }
 
@@ -212,26 +208,27 @@ public class PostService {
                     .forEach(m -> filesToDelete.put(m.getPublicId(), m.getResourceType()));
         }
 
+        Post updated;
         try {
-            Post updated = self.applyUpdateWithinTransaction(post, request, newUploads);
+            updated = self.applyUpdateWithinTransaction(post, request, newUploads);
 
             if (!filesToDelete.isEmpty()) {
                 deleteCloudinaryFiles(filesToDelete); // Gọi hàm batch delete
             }
 
-            eventPublisher.publishEvent(new PostUpdatedEvent(
-                    this, updated.getId(), currentUserId, "Post content updated"));
-
-            return postMapper.toPostResponse(updated);
         } catch (Exception e) {
             log.warn("Update DB thất bại, tiến hành dọn dẹp các file mới tải lên...");
             CompletableFuture.runAsync(() -> rollbackUploadedFiles(newUploads), uploadExecutor);
             throw e;
         }
+        eventPublisher.publishEvent(new PostUpdatedEvent(
+                this, updated.getId(), currentUserId, "Post content updated"));
+
+        return postMapper.toPostResponse(updated);
     }
 
     @Transactional
-    protected Post applyUpdateWithinTransaction(Post post, PostUpdateRequest request, List<UploadResult> newUploads) {
+    public Post applyUpdateWithinTransaction(Post post, PostUpdateRequest request, List<UploadResult> newUploads) {
         if (request.getTitle() != null)
             post.setTitle(request.getTitle());
         if (request.getContent() != null)
@@ -242,6 +239,14 @@ public class PostService {
         // Xóa media TRONG transaction
         if (!CollectionUtils.isEmpty(request.getRemoveMediaPublicIds())) {
             post.getMediaList().removeIf(m -> request.getRemoveMediaPublicIds().contains(m.getPublicId()));
+            log.warn("Xóa media TRONG transaction ở update post thành công");
+        }
+
+        post.getMediaList().sort(Comparator.comparingInt(PostMedia::getDisplayOrder));
+
+        // Bước B: Đánh lại số thứ tự liên tục từ 0, 1, 2...
+        for (int i = 0; i < post.getMediaList().size(); i++) {
+            post.getMediaList().get(i).setDisplayOrder(i);
         }
 
         // Thêm media
@@ -256,26 +261,30 @@ public class PostService {
                     .displayOrder(nextOrder + i)
                     .build();
             post.addMedia(media);
+            log.warn("Thêm media ở update post thành công");
         }
 
-        // Update Tag (FIX CHUẨN)
+        // Update Tag
         if (request.getTagNames() != null) {
 
             post.getPostTags().clear();
+            postRepository.flush();
+
+            Set<Tag> oldTags = post.getPostTags().stream()
+                    .map(PostTag::getTag)
+                    .collect(Collectors.toSet());
+
+            tagService.decreaseUsageCount(oldTags);
 
             Set<Tag> tags = tagService.resolveOrCreateTags(request.getTagNames());
 
             for (Tag tag : tags) {
-                PostTag pt = PostTag.builder()
-                        .post(post)
-                        .tag(tag)
-                        .createdAt(LocalDateTime.now())
-                        .build();
-
+                PostTag pt = PostTag.of(post, tag);
                 post.getPostTags().add(pt);
             }
 
             tagService.increaseUsageCount(tags);
+            log.warn("Update tag ở update post thành công");
         }
 
         // Update sources
@@ -285,9 +294,12 @@ public class PostService {
             request.getSources().stream()
                     .map(postMapper::toSourceEntity)
                     .forEach(post::addSource);
+
+            log.warn("Update sources ở update post thành công");
         }
 
         return post;
+
     }
 
     // ================= DELETE =================
@@ -329,8 +341,11 @@ public class PostService {
     // ================= PRIVATE HELPERS =================
 
     private List<UploadResult> uploadFilesConcurrentlyWithRollback(List<MultipartFile> files, String folderName) {
-        if (CollectionUtils.isEmpty(files))
+        if (CollectionUtils.isEmpty(files)) {
+            log.warn("Không có file  mới nào được tải lên");
+
             return List.of();
+        }
 
         List<CompletableFuture<UploadResult>> futures = files.stream()
                 .map(file -> CompletableFuture.supplyAsync(
@@ -338,6 +353,8 @@ public class PostService {
                         uploadExecutor // Dùng thread pool riêng
                 ))
                 .toList();
+
+        log.warn("thêm một file mới");
 
         try {
             return futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
@@ -404,6 +421,6 @@ public class PostService {
     }
 
     private String getPostFolderForUser(UUID userId) {
-        return "history_social" + "posts/" + userId.toString();
+        return "history_social/" + "posts/" + userId.toString();
     }
 }

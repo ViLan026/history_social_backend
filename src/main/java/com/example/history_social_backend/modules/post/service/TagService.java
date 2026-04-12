@@ -58,4 +58,10 @@ public class TagService {
         tags.forEach(tag -> tag.setUsageCount(tag.getUsageCount() + 1));
         // Hibernate auto dirty checking → không cần save()
     }
+
+    @Transactional
+    public void decreaseUsageCount(Set<Tag> tags) {
+        tags.forEach(tag -> tag.setUsageCount(tag.getUsageCount() - 1));
+        // Hibernate auto dirty checking → không cần save()
+    }
 }

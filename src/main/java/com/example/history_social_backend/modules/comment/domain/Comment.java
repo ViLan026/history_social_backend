@@ -6,8 +6,6 @@ import java.util.UUID;
 import com.example.history_social_backend.common.domain.BaseEntity;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
-import com.example.history_social_backend.modules.post.domain.Post;
-import com.example.history_social_backend.modules.user.domain.User;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,13 +25,11 @@ public class Comment extends BaseEntity {
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    UUID post;
+    @Column(name = "post_id", nullable = false)
+    UUID postId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    UUID author;
+    @Column(name = "author_id", nullable = false)
+    UUID authorId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;

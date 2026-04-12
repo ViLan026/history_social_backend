@@ -14,6 +14,6 @@ public class PostSourceResponse {
     UUID id;
     String title;
     String url;
-    String author;
+    String authorName;
     Integer publishedYear;
 }

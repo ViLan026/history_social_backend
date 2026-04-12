@@ -9,24 +9,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
 
     Optional<Reaction> findByPostIdAndUserId(UUID postId, UUID userId);
 
     @Query("""
-            SELECT new ReactionCount(r.type, COUNT(r))
+            SELECT new com.example.history_social_backend.modules.reaction.dto.response.ReactionCount(r.type, COUNT(*))
             FROM Reaction r
-            WHERE r.post.id = :postId
+            WHERE r.postId = :postId
             GROUP BY r.type
             """)
     List<ReactionCount> getReactionStats(@Param("postId") UUID postId);
 
-    Page<Reaction> findByPost(UUID postId, Pageable pageable);
+    Page<Reaction> findByPostId(UUID postId, Pageable pageable);
 
-    Page<Reaction> findByPostAndType(UUID postId, ReactionType type, Pageable pageable);
+    Page<Reaction> findByPostIdAndType(UUID postId, ReactionType type, Pageable pageable);
 }

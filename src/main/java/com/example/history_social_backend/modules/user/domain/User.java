@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import org.hibernate.annotations.UuidGenerator;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +20,7 @@ import java.util.UUID;
 public class User extends BaseEntity {
 
     @Id
-    @UuidGenerator
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     UUID id;
 

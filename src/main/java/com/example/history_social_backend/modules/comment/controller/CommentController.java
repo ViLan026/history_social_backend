@@ -9,7 +9,6 @@ import com.example.history_social_backend.modules.comment.service.CommentService
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -31,12 +30,11 @@ public class CommentController {
             @PathVariable UUID postId,
             @PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
             Pageable pageable) {
-        return commentService.getCommentsByPostId(postId, pageable);
+        return ApiResponse.success(commentService.getCommentsByPostId(postId, pageable));
     }
 
     @DeleteMapping("/{commentId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResponse<Void> deleteComment(@PathVariable UUID commentId) {
-        return commentService.deleteComment(commentId);
+        return ApiResponse.success(commentService.deleteComment(commentId));
     }
 }

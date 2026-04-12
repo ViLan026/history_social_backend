@@ -60,17 +60,17 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse<PageResponse<CommentResponse>> getCommentsByPostId(UUID postId, Pageable pageable) {
+    public PageResponse<CommentResponse> getCommentsByPostId(UUID postId, Pageable pageable) {
         Page<Comment> commentPage = commentRepository.findByPostIdAndNotDeleted(postId, pageable);
 
         Page<CommentResponse> responsePage = commentPage.map(commentMapper::toResponse);
         PageResponse<CommentResponse> pageResponse = PageResponse.from(responsePage);
 
-        return ApiResponse.success(pageResponse);
+        return pageResponse;
     }
 
     @Transactional
-    public ApiResponse<Void> deleteComment(UUID commentId) {
+    public String deleteComment(UUID commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
@@ -90,7 +90,7 @@ public class CommentService {
         comment.markAsDeleted();
         commentRepository.save(comment);
 
-        return ApiResponse.success("Comment deleted successfully", null);
+        return "success";
     }
 
     private boolean isCurrentUserAdmin() {

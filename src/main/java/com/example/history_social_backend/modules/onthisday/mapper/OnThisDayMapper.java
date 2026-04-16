@@ -4,6 +4,7 @@ import com.example.history_social_backend.modules.onthisday.dto.OnThisDayRequest
 import com.example.history_social_backend.modules.onthisday.dto.OnThisDayResponse;
 import com.example.history_social_backend.modules.onthisday.domain.OnThisDay;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 
@@ -19,6 +20,7 @@ public interface OnThisDayMapper {
 
     List<OnThisDayResponse> toResponseList(List<OnThisDay> entities);
 
+    @Mapping(target = "id", ignore = true)
     OnThisDay toEntity(OnThisDayRequest request);
 
     void updateEntityFromRequest(@MappingTarget OnThisDay entity, OnThisDayRequest request);

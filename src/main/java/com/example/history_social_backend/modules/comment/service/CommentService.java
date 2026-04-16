@@ -1,6 +1,7 @@
 package com.example.history_social_backend.modules.comment.service;
 
-import com.example.history_social_backend.common.event.CommentCreatedEvent;
+import com.example.history_social_backend.common.messaging.model.EventType;
+import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.exception.AppException;
@@ -10,13 +11,15 @@ import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
+import com.example.history_social_backend.modules.comment.message.CommentCreatedMessage;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,7 +33,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RedisEventProducer eventProducer;
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -50,17 +53,27 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         // Publish event sau khi lưu thành công
-        eventPublisher.publishEvent(new CommentCreatedEvent(
-                savedComment.getId(),
-                request.getPostId(),
-                authorId));
+        // eventPublisher.publishEvent(new CommentCreatedEvent(
+        // savedComment.getId(),
+        // request.getPostId(),
+        // authorId));
+
+        CommentCreatedMessage message = CommentCreatedMessage.builder()
+                .commentId(savedComment.getId())
+                .postId(savedComment.getPostId())
+                .authorId(authorId)
+                .build();
+        eventProducer.publishAfterCommit(EventType.COMMENT_CREATED, message, "CommentService");
 
         CommentResponse response = commentMapper.toResponse(savedComment);
         return ApiResponse.success("Comment created successfully", response);
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<CommentResponse> getCommentsByPostId(UUID postId, Pageable pageable) {
+    public PageResponse<CommentResponse> getCommentsByPostId(UUID postId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
         Page<Comment> commentPage = commentRepository.findByPostIdAndNotDeleted(postId, pageable);
 
         Page<CommentResponse> responsePage = commentPage.map(commentMapper::toResponse);
@@ -98,4 +111,22 @@ public class CommentService {
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
+
+    // private double calculateActionWeight(String actionType, LocalDateTime
+    // createdAt) {
+    // double base = switch (actionType) {
+    // case "save" -> 3.0;
+    // case "comment" -> 2.5;
+    // case "like" -> 1.5;
+    // case "view" -> 0.8;
+    // case "dislike" -> -1.0;
+    // default -> 0.0;
+    // };
+
+    // // Time decay: tương tác càng mới càng quan trọng
+    // long hoursOld = ChronoUnit.HOURS.between(createdAt, LocalDateTime.now());
+    // double decay = Math.exp(-0.05 * hoursOld); // giảm dần theo thời gian
+
+    // return base * decay;
+    // }
 }

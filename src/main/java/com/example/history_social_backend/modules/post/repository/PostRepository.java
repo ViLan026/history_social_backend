@@ -18,7 +18,7 @@ import java.util.UUID;
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
-    /** Fetch Post kèm media và sources trong một query để tránh N+1. */
+    // Fetch Post kèm media và sources trong một query để tránh N+1. 
     @Query("""
             SELECT DISTINCT p FROM Post p
             LEFT JOIN FETCH p.mediaList
@@ -30,7 +30,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
-    /** Tìm kiếm full-text đơn giản trong title và content. */
+    // Tìm kiếm full-text đơn giản trong title và content. 
     @Query("""
             SELECT p FROM Post p
             WHERE LOWER(p.title)   LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -38,7 +38,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
             """)
     Page<Post> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-    /** Tăng view count bằng UPDATE trực tiếp, tránh load entity. */
+    // Tăng view count bằng UPDATE trực tiếp, tránh load entity. 
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(@Param("id") UUID id);

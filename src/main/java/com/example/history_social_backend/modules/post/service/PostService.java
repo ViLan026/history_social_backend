@@ -1,8 +1,7 @@
 package com.example.history_social_backend.modules.post.service;
 
-import com.example.history_social_backend.common.event.PostCreatedEvent;
-import com.example.history_social_backend.common.event.PostDeletedEvent;
-import com.example.history_social_backend.common.event.PostUpdatedEvent;
+import com.example.history_social_backend.common.messaging.model.EventType;
+import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
@@ -14,6 +13,9 @@ import com.example.history_social_backend.modules.post.dto.request.PostUpdateReq
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostSummaryResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
+import com.example.history_social_backend.modules.post.message.PostCreatedMessage;
+import com.example.history_social_backend.modules.post.message.PostDeletedMessage;
+import com.example.history_social_backend.modules.post.message.PostUpdatedMessage;
 import com.example.history_social_backend.modules.post.repository.PostMediaRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +53,7 @@ public class PostService {
     private final PostMediaRepository postMediaRepository;
     private final CloudinaryService cloudinaryService;
     private final PostMapper postMapper;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RedisEventProducer eventProducer;
     private final TagService tagService;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
@@ -90,9 +92,17 @@ public class PostService {
             throw e;
         }
 
-        // 3. Publish event
-        eventPublisher.publishEvent(new PostCreatedEvent(
-                this, savedPost.getId(), authorId, savedPost.getTitle()));
+        // // 3. Publish event
+        // eventPublisher.publishEvent(new PostCreatedEvent(
+        // this, savedPost.getId(), authorId, savedPost.getTitle()));
+
+        PostCreatedMessage message = PostCreatedMessage.builder()
+                .postId(savedPost.getId())
+                .authorId(savedPost.getAuthorId())
+                .title(savedPost.getTitle())
+                .build();
+
+        eventProducer.publishAfterCommit(EventType.POST_CREATED, message, "PostService");
 
         return postMapper.toPostResponse(savedPost);
     }
@@ -221,8 +231,16 @@ public class PostService {
             CompletableFuture.runAsync(() -> rollbackUploadedFiles(newUploads), uploadExecutor);
             throw e;
         }
-        eventPublisher.publishEvent(new PostUpdatedEvent(
-                this, updated.getId(), currentUserId, "Post content updated"));
+
+        // eventPublisher.publishEvent(new PostUpdatedEvent(
+        // this, updated.getId(), currentUserId, "Post content updated"));
+
+        PostUpdatedMessage message = PostUpdatedMessage.builder()
+                .postId(postId)
+                .updatedBy(currentUserId)
+                .changeDescription("Content updated")
+                .build();
+        eventProducer.publishAfterCommit(EventType.POST_UPDATED, message, "PostService");
 
         return postMapper.toPostResponse(updated);
     }
@@ -334,7 +352,15 @@ public class PostService {
             });
         }, uploadExecutor);
 
-        eventPublisher.publishEvent(new PostDeletedEvent(this, postId, currentUserId));
+        // eventPublisher.publishEvent(new PostDeletedEvent(this, postId,
+        // currentUserId));
+
+        PostDeletedMessage message = PostDeletedMessage.builder()
+                .postId(postId)
+                .deletedBy(currentUserId)
+                .build();
+        eventProducer.publishAfterCommit(EventType.POST_DELETED, message, "PostService");
+
         log.info("Post deleted: postId={}, by={}", postId, currentUserId);
     }
 

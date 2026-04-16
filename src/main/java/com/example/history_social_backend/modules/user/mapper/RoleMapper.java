@@ -28,4 +28,4 @@ public interface RoleMapper {
 }
 
 // NullValuePropertyMappingStrategy.IGNORE sẽ bỏ qua các trường null. Nó có hiệu quả trong trường hợp giá trị ở nguồn là null và ở địch thì có giá trị tồn tại 
-// với dòng này RoleResponse toResponse(Role role); thì RoleResponse là đích và nếu các trường nào có trong RoleResponse(đích) mà không có trong Role(Nguồn) thì mặc định sẽ là null 
+// với dòng này RoleResponse toResponse(Role role); thì RoleResponse là đích và nếu các trường có trong RoleResponse(đích) nhưng không có trong Role(Nguồn) thì mặc định sẽ là null 

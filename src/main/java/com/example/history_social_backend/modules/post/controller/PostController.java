@@ -40,11 +40,14 @@ public class PostController {
         return ApiResponse.success(response);
     }
 
+    // xem chi tiết bài viết 
     @GetMapping("/{id}")
     public ApiResponse<PostResponse> getPost(@PathVariable UUID id) {
         return ApiResponse.success(postService.getPostById(id));
     }
 
+
+    // trang chủ hoặc trending 
     @GetMapping
     public ApiResponse<PageResponse<PostSummaryResponse>> getPublishedPosts(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
@@ -53,6 +56,7 @@ public class PostController {
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
+    // xem danh sách bài viết của một tác giả nào đó 
     @GetMapping("/author/{authorId}")
     public ApiResponse<PageResponse<PostSummaryResponse>> getPostsByAuthor(
             @PathVariable UUID authorId,
@@ -62,6 +66,7 @@ public class PostController {
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
+    // 
     @GetMapping("/search")
     public ApiResponse<PageResponse<PostSummaryResponse>> searchPosts(
             @RequestParam String keyword,

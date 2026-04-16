@@ -7,8 +7,6 @@ import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.service.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -28,9 +26,9 @@ public class CommentController {
     @GetMapping("/posts/{postId}")
     public ApiResponse<PageResponse<CommentResponse>> getCommentsByPost(
             @PathVariable UUID postId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
-            Pageable pageable) {
-        return ApiResponse.success(commentService.getCommentsByPostId(postId, pageable));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.success(commentService.getCommentsByPostId(postId, page, size));
     }
 
     @DeleteMapping("/{commentId}")

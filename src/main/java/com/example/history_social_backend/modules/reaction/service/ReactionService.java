@@ -1,6 +1,7 @@
 package com.example.history_social_backend.modules.reaction.service;
 
-import com.example.history_social_backend.common.event.ReactionAddedEvent;
+import com.example.history_social_backend.common.messaging.model.EventType;
+import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
@@ -9,6 +10,7 @@ import com.example.history_social_backend.modules.reaction.dto.request.ReactionR
 import com.example.history_social_backend.modules.reaction.dto.response.ReactionCount;
 import com.example.history_social_backend.modules.reaction.dto.response.ReactionDetailResponse;
 import com.example.history_social_backend.modules.reaction.dto.response.ReactionStatsResponse;
+import com.example.history_social_backend.modules.reaction.message.ReactionAddedMessage;
 import com.example.history_social_backend.modules.reaction.repository.ReactionRepository;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.service.UserService;
@@ -16,7 +18,6 @@ import com.example.history_social_backend.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 public class ReactionService {
 
     private final ReactionRepository reactionRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RedisEventProducer eventProducer;
     private final UserService userService;
 
     @Transactional
@@ -62,10 +63,17 @@ public class ReactionService {
             reactionRepository.save(newReaction);
 
             // Publish event CHỈ khi tạo reaction mới
-            eventPublisher.publishEvent(new ReactionAddedEvent(
-                    postId,
-                    authorId,
-                    newType));
+            // eventPublisher.publishEvent(new ReactionAddedEvent(
+            // postId,
+            // authorId,
+            // newType));
+
+            ReactionAddedMessage message = ReactionAddedMessage.builder()
+                    .postId(postId)
+                    .userId(authorId)
+                    .reactionType(newType)
+                    .build();
+            eventProducer.publishAfterCommit(EventType.REACTION_ADDED, message, "ReactionService");
 
             return newReaction.getType();
 
@@ -143,6 +151,5 @@ public class ReactionService {
         // Đóng gói thành PageResponse chuẩn ngay tại Service
         return PageResponse.from(detailsPage);
     }
-
 
 }

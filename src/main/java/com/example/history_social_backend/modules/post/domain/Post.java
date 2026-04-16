@@ -52,10 +52,6 @@ public class Post extends BaseEntity {
     @Builder.Default
     PostStatus status = PostStatus.DRAFT;
 
-    @Column(name = "view_count")
-    @Builder.Default
-    Long viewCount = 0L;
-
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     List<PostMedia> mediaList = new ArrayList<>();
@@ -67,6 +63,15 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     Set<PostTag> postTags = new HashSet<>();
+
+
+        @Column(name = "view_count")
+    @Builder.Default
+    Long viewCount = 0L;
+
+    // Float feed_score;
+    // Float trending_score;
+    // embedding VECTOR(768),
 
     LocalDateTime deletedAt;
 

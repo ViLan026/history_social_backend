@@ -89,7 +89,7 @@ public class UserService {
         User saved = userRepository.save(user);
         log.info("Created user with id={}", saved.getId());
         return userMapper.toResponse(saved);
-    }
+    }   
 
     private String generateRandomUsername(String email) {
         // Lấy phần tên trước ký tự '@'

@@ -3,7 +3,6 @@ package com.example.history_social_backend.modules.bookmark.controller;
 import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
-import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkCountResponse;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkResponse;
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkStatusResponse;

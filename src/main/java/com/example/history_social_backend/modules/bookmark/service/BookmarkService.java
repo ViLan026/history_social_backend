@@ -10,7 +10,6 @@ import com.example.history_social_backend.modules.bookmark.dto.response.Bookmark
 import com.example.history_social_backend.modules.bookmark.mapper.BookmarkMapper;
 import com.example.history_social_backend.modules.bookmark.repository.BookmarkRepository;
 import com.example.history_social_backend.modules.post.service.PostService;
-import com.example.history_social_backend.modules.user.service.UserService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -38,12 +37,13 @@ public class BookmarkService {
 
         UUID userId = SecurityUtils.getCurrentUserId();
 
-        // chỉ check tồn tại
+        //  check tồn tại
         if (!postService.existsById(postId)) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
 
-        boolean exists = bookmarkRepository.existsByUserIdAndPostId(userId, postId);
+        // boolean exists = bookmarkRepository.existsByUserIdAndPostId(userId, postId);
+        boolean exists = isBookmarked(postId);
 
         if (exists) {
             bookmarkRepository.deleteByUserIdAndPostId(userId, postId);

@@ -42,7 +42,7 @@ public class AuthenticationService {
 
     @Transactional
     public UserResponse register(UserCreationRequest request) {
-        // 1. (Tuỳ chọn) Thực hiện các logic nghiệp vụ riêng của luồng Đăng ký (Auth)
+        // 1. Thực hiện các logic nghiệp vụ riêng của luồng Đăng ký (Auth)
         // Ví dụ:
         // - Kiểm tra Google reCAPTCHA
         // - Ghi log hành vi đăng ký
@@ -51,7 +51,7 @@ public class AuthenticationService {
         // 2. Gọi UserService để thực hiện việc tạo và lưu User vào Database
         UserResponse newUser = userService.createUser(request);
 
-        // 3. (Tuỳ chọn) Xử lý các logic sau khi tạo thành công
+        // 3. Xử lý các logic sau khi tạo thành công
         // Ví dụ:
         // - Bắn Event để gửi email kích hoạt tài khoản
         // - Khởi tạo các dữ liệu mặc định khác cho user mới...

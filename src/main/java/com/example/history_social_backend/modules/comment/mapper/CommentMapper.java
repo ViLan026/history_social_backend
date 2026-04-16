@@ -2,7 +2,7 @@ package com.example.history_social_backend.modules.comment.mapper;
 
 import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
-import org.mapstruct.Mapper;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface CommentMapper {

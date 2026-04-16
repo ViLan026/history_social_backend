@@ -20,6 +20,7 @@ spring:
   jackson:
     time-zone: Asia/Ho_Chi_Minh
 
+
   config:
     import: "classpath:application-secret.yaml"
 
@@ -27,3 +28,16 @@ server:
   port: 8080
   servlet:
     context-path: /history_social
+
+
+messaging:
+  redis:
+    stream:
+      name: social-events-stream
+      consumer-group: notification-consumer-group
+      consumer-name: notification-consumer-${random.uuid}
+      batch-size: 10
+      poll-timeout: 2000
+      pending-messages-check-interval: 60000  # 60s
+      max-retry-count: 5
+      claim-min-idle-time: 300000  # 5 minutes

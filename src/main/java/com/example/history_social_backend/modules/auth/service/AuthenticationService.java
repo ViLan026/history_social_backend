@@ -10,10 +10,7 @@ import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.modules.auth.domain.RefreshToken;
 import com.example.history_social_backend.modules.auth.dto.request.AuthenticationRequest;
-import com.example.history_social_backend.modules.auth.dto.request.IntrospectRequest;
-import com.example.history_social_backend.modules.auth.dto.request.RefreshRequest;
-import com.example.history_social_backend.modules.auth.dto.response.AuthenticationResponse;
-import com.example.history_social_backend.modules.auth.dto.response.IntrospectResponse;
+import com.example.history_social_backend.modules.auth.dto.response.TokenPair;
 import com.example.history_social_backend.modules.auth.repository.RefreshTokenRepository;
 import com.example.history_social_backend.modules.user.domain.User;
 import com.example.history_social_backend.modules.user.dto.request.UserCreationRequest;
@@ -59,7 +56,7 @@ public class AuthenticationService {
         return newUser;
     }
 
-    public AuthenticationResponse login(AuthenticationRequest request) {
+    public TokenPair login(AuthenticationRequest request) {
         User user = userService.findByEmail(request.getEmail());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
@@ -75,10 +72,10 @@ public class AuthenticationService {
 
             saveRefreshToken(refreshToken, user);
 
-            return AuthenticationResponse.builder()
+            return TokenPair.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
-                    .authenticated(true)
+                    // .authenticated(true)
                     .build();
 
         } catch (KeyLengthException | ParseException e) {
@@ -96,77 +93,90 @@ public class AuthenticationService {
                 .id(jti)
                 .userId(user.getId())
                 .expiryTime(expiry)
-                .revoked(false)      // token chưa bị thu hồi (còn dùng được)
+                .revoked(false) // token chưa bị thu hồi (còn dùng được)
                 .build();
 
         refreshTokenRepository.save(entity);
     }
 
-    // hàm kiểm tra token có hợp lệ, chưa bị thu hồi hay chưa hết hạn
-    public IntrospectResponse introspect(IntrospectRequest request) {
-        String token = request.getToken();
+    // // hàm kiểm tra token có hợp lệ, chưa bị thu hồi hay chưa hết hạn
+    // public IntrospectResponse introspect(IntrospectRequest request) {
+    //     String token = request.getToken();
 
-        try {
-            jwtService.verifyAccessToken(token);
-            return IntrospectResponse.builder()
-                    .valid(true)
-                    .build();
+    //     try {
+    //         jwtService.verifyAccessToken(token);
+    //         return IntrospectResponse.builder()
+    //                 .valid(true)
+    //                 .build();
 
-        } catch (AppException | JOSEException | ParseException e) {
-            return IntrospectResponse.builder()
-                    .valid(false)
-                    .build();
-        }
-    }
+    //     } catch (AppException | JOSEException | ParseException e) {
+    //         return IntrospectResponse.builder()
+    //                 .valid(false)
+    //                 .build();
+    //     }
+    // }
 
-    public AuthenticationResponse refresh(RefreshRequest request) {
-        try {
-            SignedJWT jwt = jwtService.verifyRefreshToken(request.getRefreshToken());
+    public TokenPair refresh(String refreshToken) {
 
-            String jti = jwt.getJWTClaimsSet().getJWTID();
-
-            RefreshToken stored = refreshTokenRepository.findById(jti)
-                    .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
-
-            if (stored.isRevoked())
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
-
-            // revoke old refresh token
-            stored.setRevoked(true);
-            refreshTokenRepository.save(stored);
-
-            User user = userService.findById(stored.getUserId());
-
-            String newAccess = jwtService.generateAccessToken(user);
-            String newRefresh = jwtService.generateRefreshToken(user);
-
-            saveRefreshToken(newRefresh, user);
-
-            return AuthenticationResponse.builder()
-                    .accessToken(newAccess)
-                    .refreshToken(newRefresh)
-                    .authenticated(true)
-                    .build();
-
-        } catch (JOSEException | ParseException e) {
+        if (refreshToken == null || refreshToken.isBlank()) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-    }
 
-    public void logout(String refreshToken) {
         try {
             SignedJWT jwt = jwtService.verifyRefreshToken(refreshToken);
 
             String jti = jwt.getJWTClaimsSet().getJWTID();
 
             RefreshToken stored = refreshTokenRepository.findById(jti)
-                    .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+                    .orElseThrow(() -> new AppException(
+                            ErrorCode.UNAUTHENTICATED));
+
+            if (stored.isRevoked()) {
+                throw new AppException(
+                        ErrorCode.UNAUTHENTICATED);
+            }
 
             stored.setRevoked(true);
             refreshTokenRepository.save(stored);
 
+            User user = userService.findById(
+                    stored.getUserId());
+
+            String newAccess = jwtService.generateAccessToken(user);
+
+            String newRefresh = jwtService.generateRefreshToken(user);
+
+            saveRefreshToken(newRefresh, user);
+
+            return TokenPair.builder()
+                    .accessToken(newAccess)
+                    .refreshToken(newRefresh)
+                    .build();
+
         } catch (JOSEException | ParseException e) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(
+                    ErrorCode.UNAUTHENTICATED);
+        }
+    }
+
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
+
+        try {
+            SignedJWT jwt = jwtService.verifyRefreshToken(refreshToken);
+            String jti = jwt.getJWTClaimsSet().getJWTID();
+
+            RefreshToken stored = refreshTokenRepository.findById(jti)
+                    .orElse(null);
+
+            if (stored != null && !stored.isRevoked()) {
+                stored.setRevoked(true);
+                refreshTokenRepository.save(stored);
+            }
+        } catch (JOSEException | ParseException e) {
+            // Logout vẫn nên thành công ở phía client; chỉ ghi log nếu cần
         }
     }
 }

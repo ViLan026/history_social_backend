@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Envelope wrapper cho tất cả domain events trong Redis Streams
- */
+// Envelope wrapper cho tất cả domain events trong Redis Streams
 @Data
 @Builder
 @NoArgsConstructor

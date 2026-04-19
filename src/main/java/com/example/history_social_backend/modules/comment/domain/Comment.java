@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
+import com.example.history_social_backend.common.utils.UuidV7;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 
@@ -21,8 +22,8 @@ import lombok.experimental.FieldDefaults;
 public class Comment extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    @UuidV7
+    @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     UUID id;
 
     @Column(name = "post_id", nullable = false)

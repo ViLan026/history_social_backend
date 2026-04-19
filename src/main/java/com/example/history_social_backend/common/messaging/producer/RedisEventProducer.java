@@ -17,10 +17,10 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Producer service để publish events vào Redis Streams
- * Thay thế ApplicationEventPublisher
- */
+
+// Producer service để publish events vào Redis Streams
+// Thay thế ApplicationEventPublisher
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -30,10 +30,9 @@ public class RedisEventProducer {
     private final RedisMessagingConfig messagingConfig;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Publish event SAU KHI transaction commit thành công
-     * Tương đương @TransactionalEventListener(phase = AFTER_COMMIT)
-     */
+    
+    // Publish event SAU KHI transaction commit thành công
+    // Tương đương @TransactionalEventListener(phase = AFTER_COMMIT)
     public void publishAfterCommit(EventType eventType, Object payload, String source) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             // Đăng ký callback để publish sau khi commit
@@ -49,9 +48,7 @@ public class RedisEventProducer {
         }
     }
 
-    /**
-     * Publish event ngay lập tức (không đợi transaction)
-     */
+// Publish event ngay lập tức (không đợi transaction)
     public void publishEvent(EventType eventType, Object payload, String source) {
         try {
             EventEnvelope envelope = EventEnvelope.create(eventType, payload, source);
@@ -83,9 +80,7 @@ public class RedisEventProducer {
         }
     }
 
-    /**
-     * Publish event ngay lập tức với source mặc định
-     */
+// Publish event ngay lập tức với source mặc định
     public void publishEvent(EventType eventType, Object payload) {
         publishEvent(eventType, payload, "unknown");
     }

@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.post.domain;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
@@ -9,31 +10,30 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Entity
-@Table(name = "tags", indexes = {
-        @Index(name = "idx_tag_name", columnList = "name")
-})
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Tag extends BaseEntity {
+@Entity
+@Table(name = "trending_scores")
+public class TrendingScore extends BaseEntity{
 
     @Id
     @UuidV7
     @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     UUID id;
 
-    @Column(nullable = false, unique = true, length = 100)
-    String name;
+    @Column(precision = 5, scale = 4)
+    BigDecimal wilsonScore;
 
-    @Column(length = 300)
-    String description;
+    @Column(precision = 8, scale = 2)
+    BigDecimal engagementScore;
 
-    @Builder.Default
-    @Column(name = "usage_count", nullable = false)
-    Integer usageCount = 0;
+    @Column(precision = 8, scale = 2)
+    BigDecimal finalScore;
+
+    String period;               // daily, peak_hour
 }

@@ -1,6 +1,8 @@
 package com.example.history_social_backend.modules.user.domain;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
+import com.example.history_social_backend.common.utils.UuidV7;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,8 +22,8 @@ import java.util.UUID;
 public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
+    @UuidV7
+    @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     UUID id;
 
     @Column(name = "email", length = 255, nullable = false, unique = true)

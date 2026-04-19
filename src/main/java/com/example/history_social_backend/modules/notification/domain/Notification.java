@@ -1,6 +1,8 @@
 package com.example.history_social_backend.modules.notification.domain;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
+import com.example.history_social_backend.common.utils.UuidV7;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,10 +19,10 @@ import java.util.UUID;
 public class Notification extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    @UuidV7
+    @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     UUID id;
-
+    
     @Column(name = "recipient_id", nullable = false)
     UUID recipientId;
 

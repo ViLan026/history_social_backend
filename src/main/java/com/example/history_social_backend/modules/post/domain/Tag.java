@@ -37,3 +37,4 @@ public class Tag extends BaseEntity {
     @Column(name = "usage_count", nullable = false)
     Integer usageCount = 0;
 }
+

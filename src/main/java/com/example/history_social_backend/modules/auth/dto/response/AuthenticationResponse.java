@@ -12,5 +12,4 @@ import lombok.experimental.FieldDefaults;
 public class AuthenticationResponse {
 
     Boolean authenticated;
-    String message;
 }

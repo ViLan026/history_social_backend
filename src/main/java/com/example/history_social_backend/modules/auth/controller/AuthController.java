@@ -40,7 +40,6 @@ public class AuthController {
                 .build();
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(
             @RequestBody @Valid AuthenticationRequest request,
@@ -121,13 +120,13 @@ public class AuthController {
 
     // @PostMapping("/introspect")
     // public ApiResponse<IntrospectResponse> introspect(
-    //         @RequestBody @Valid IntrospectRequest request) {
+    // @RequestBody @Valid IntrospectRequest request) {
 
-    //     return ApiResponse.<IntrospectResponse>builder()
-    //             .code(HttpStatus.OK.value())
-    //             .message(null)
-    //             .data(authService.introspect(request))
-    //             .build();
+    // return ApiResponse.<IntrospectResponse>builder()
+    // .code(HttpStatus.OK.value())
+    // .message(null)
+    // .data(authService.introspect(request))
+    // .build();
     // }
 
     // @PostMapping("/refresh")
@@ -160,7 +159,6 @@ public class AuthController {
                         .data(
                                 AuthenticationResponse.builder()
                                         .authenticated(true)
-                                        .message("Token refreshed successfully")
                                         .build())
                         .timestamp(LocalDateTime.now())
                         .build());

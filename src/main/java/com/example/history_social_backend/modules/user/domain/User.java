@@ -32,11 +32,6 @@ public class User extends BaseEntity {
     @Column(name = "password", length = 255, nullable = false)
     String password;
 
-    // @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    // @JoinColumn(name = "role_id", nullable = false,
-    //             foreignKey = @ForeignKey(name = "fk_users_role"))
-    // Role role;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles", // Tên bảng trung gian sẽ được tự động tạo trong DB
             joinColumns = @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_user_roles_user")),

@@ -7,7 +7,6 @@ import com.example.history_social_backend.common.domain.BaseEntity;
 import com.example.history_social_backend.common.utils.UuidV7;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
-
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -32,11 +31,16 @@ public class Comment extends BaseEntity {
     @Column(name = "author_id", nullable = false)
     UUID authorId;
 
+    // Self-reference (reply)
+    @Column(name = "parent_id")
+    UUID parentId;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;
 
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
+
 
     public void validateContent() {
         if (content == null || content.replaceAll("[\\p{P}\\s]", "").isEmpty()) {
@@ -49,5 +53,9 @@ public class Comment extends BaseEntity {
             throw new AppException(ErrorCode.COMMENT_ALREADY_DELETED);
         }
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isReply() {
+        return parentId != null;
     }
 }

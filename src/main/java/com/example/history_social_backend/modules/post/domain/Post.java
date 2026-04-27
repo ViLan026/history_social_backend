@@ -21,7 +21,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Table(name = "posts", indexes = {
         @Index(name = "idx_post_author", columnList = "author_id"),
         @Index(name = "idx_post_status", columnList = "status"),
-        @Index(name = "idx_post_created", columnList = "created_at")
+        @Index(name = "idx_post_created", columnList = "post_id")
 })
 @SQLDelete(sql = "UPDATE posts SET deleted_at = NOW() WHERE id = ?")
 // tự động gắn thêm điều kiện WHERE deleted_at IS NULL vào mọi câu lệnh SELECT

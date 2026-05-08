@@ -42,6 +42,11 @@ public class UserController {
         return ApiResponse.success(userService.getUserById(id));
     }
 
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> getMe() {
+        return ApiResponse.success(userService.getMe());    
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<UserResponse> createUser(

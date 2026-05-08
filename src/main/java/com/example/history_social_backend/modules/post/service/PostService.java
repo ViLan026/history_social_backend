@@ -448,4 +448,21 @@ public class PostService {
     private String getPostFolderForUser(UUID userId) {
         return "history_social/" + "posts/" + userId.toString();
     }
+
+
+    @Transactional
+    public void increaseCommentCount(UUID postId) {
+        postRepository.incrementCommentCount(postId);
+    }
+
+    @Transactional
+    public void increaseReactionCount(UUID postId) {
+        postRepository.incrementReactionCount(postId);
+    }
+
+
+    @Transactional
+    public void decreaseReactionCount(UUID postId) {
+        postRepository.decrementReactionCount(postId);
+    }
 }

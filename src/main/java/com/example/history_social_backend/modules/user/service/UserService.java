@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.example.history_social_backend.core.security.SecurityUtils;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -61,6 +63,16 @@ public class UserService {
 
         // Khi gọi .map(), Spring sẽ tự động lặp qua số lượng bản ghi đã lấy được
         return userPage.map(userMapper::toSummaryResponse);
+    }
+
+    public UserResponse getMe() {
+        // Lấy email của user hiện tại từ SecurityContext
+        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return userMapper.toResponse(user);
     }
 
     @Transactional

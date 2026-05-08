@@ -21,7 +21,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Table(name = "posts", indexes = {
         @Index(name = "idx_post_author", columnList = "author_id"),
         @Index(name = "idx_post_status", columnList = "status"),
-        @Index(name = "idx_post_created", columnList = "post_id")
+        @Index(name = "idx_post_created", columnList = "id")
 })
 @SQLDelete(sql = "UPDATE posts SET deleted_at = NOW() WHERE id = ?")
 // tự động gắn thêm điều kiện WHERE deleted_at IS NULL vào mọi câu lệnh SELECT
@@ -68,6 +68,14 @@ public class Post extends BaseEntity {
     @Column(name = "view_count")
     @Builder.Default
     Long viewCount = 0L;
+
+    @Column(name = "comment_count")
+    @Builder.Default
+    Long commentCount = 0L;
+
+    @Column(name = "reaction_count")
+    @Builder.Default
+    Long reactionCount = 0L;
 
     // Float feed_score;
     // Float trending_score;

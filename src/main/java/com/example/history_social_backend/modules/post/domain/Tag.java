@@ -36,5 +36,15 @@ public class Tag extends BaseEntity {
     @Builder.Default
     @Column(name = "usage_count", nullable = false)
     Integer usageCount = 0;
+
+    @PrePersist
+    public void prePersist() {
+        if (usageCount == null) {
+            usageCount = 0;
+        }
+    }
 }
 
+// @PrePersist: Trước INSERT
+// @PreUpdate: Trước UPDATE
+// @PreRemove: Trước DELETE

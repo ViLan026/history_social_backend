@@ -11,7 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserReactionResponse {
-    UUID id;
+    UUID userId;
     String displayName;
     String avatarUrl;
 }

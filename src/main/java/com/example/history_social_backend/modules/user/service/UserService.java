@@ -101,7 +101,7 @@ public class UserService {
         User saved = userRepository.save(user);
         log.info("Created user with id={}", saved.getId());
         return userMapper.toResponse(saved);
-    }   
+    }
 
     private String generateRandomUsername(String email) {
         // Lấy phần tên trước ký tự '@'
@@ -221,9 +221,18 @@ public class UserService {
         return users.stream().collect(Collectors.toMap(
                 User::getId,
                 user -> UserReactionResponse.builder()
-                        .id(user.getId())
+                        .userId(user.getId())
                         .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
                         .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
                         .build()));
+    }
+
+    public UserReactionResponse getUserInfo(UUID id){
+        User user = findById(id);
+        return UserReactionResponse.builder()
+                .userId(user.getId())
+                .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
+                .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
+                .build();
     }
 }

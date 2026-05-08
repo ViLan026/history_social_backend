@@ -17,14 +17,14 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class TagService {
+public class PostTagService {
 
     private final TagRepository tagRepository;
 
     @Transactional
     public Set<Tag> resolveOrCreateTags(Set<String> tagNames) {
 
-        // xử lí tag viết hoa và viết thường đều giống nhau 
+        // xử lí tag viết hoa và viết thường đều giống nhau
         tagNames = tagNames.stream()
                 .map(name -> name.trim().toLowerCase())
                 .collect(Collectors.toSet());

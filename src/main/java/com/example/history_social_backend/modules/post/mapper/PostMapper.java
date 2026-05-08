@@ -15,20 +15,7 @@ public interface PostMapper {
     PostResponse toPostResponse(Post post);
 
     @Mapping(source = "postTags", target = "tags")
-    @Mapping(source = "mediaList", target = "thumbnailUrl", qualifiedByName = "getThumbnailUrl")
     PostSummaryResponse toSummaryResponse(Post post);
-
-    @Named("getThumbnailUrl")
-    default String getThumbnailUrl(List<PostMedia> mediaList) {
-        if (mediaList == null) {
-            return null;
-        }
-        return mediaList.stream()
-                .filter(m -> m.getMediaType() == MediaType.IMAGE)
-                .findFirst()
-                .map(PostMedia::getMediaUrl)
-                .orElse(null);
-    }
 
     PostMediaResponse toMediaResponse(PostMedia media);
 
@@ -52,5 +39,9 @@ public interface PostMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "post", ignore = true)
     PostSource toSourceEntity(PostSourceRequest request);
+
+    @Mapping(target = "postId", source = "post.id")
+    @Mapping(source = "postTags", target = "tags")
+    FeedPostResponse toFeedPostResponse(Post post);
 
 }

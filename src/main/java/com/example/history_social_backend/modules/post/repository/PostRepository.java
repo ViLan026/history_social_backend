@@ -26,7 +26,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
             """)
     Optional<Post> findByIdWithDetails(@Param("id") UUID id);
 
-    Page<Post> findByAuthorId(UUID authorId, Pageable pageable);
+    Page<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
 
     Page<Post> findByStatus(PostStatus status, Pageable pageable);
 

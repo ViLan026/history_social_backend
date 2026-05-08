@@ -11,7 +11,6 @@ import com.example.history_social_backend.modules.post.domain.*;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
-import com.example.history_social_backend.modules.post.dto.response.PostSummaryResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.message.PostCreatedMessage;
 import com.example.history_social_backend.modules.post.message.PostDeletedMessage;
@@ -22,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -53,7 +50,7 @@ public class PostService {
     private final CloudinaryService cloudinaryService;
     private final PostMapper postMapper;
     private final RedisEventProducer eventProducer;
-    private final TagService tagService;
+    private final PostTagService tagService;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
     private final ExecutorService uploadExecutor = Executors.newFixedThreadPool(10);
@@ -157,37 +154,6 @@ public class PostService {
         tagService.increaseUsageCount(tags);
 
         return savedPost;
-    }
-
-    // ================= READ =================
-
-    @Transactional
-    public PostResponse getPostById(UUID id) {
-        Post post = postRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-
-        post.getSources().size();
-
-        postRepository.incrementViewCount(id);
-        return postMapper.toPostResponse(post);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> getPublishedPosts(Pageable pageable) {
-        return postRepository.findByStatus(PostStatus.PUBLISHED, pageable)
-                .map(postMapper::toSummaryResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> getPostsByAuthor(UUID authorId, Pageable pageable) {
-        return postRepository.findByAuthorId(authorId, pageable)
-                .map(postMapper::toSummaryResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
-        return postRepository.searchByKeyword(keyword, pageable)
-                .map(postMapper::toSummaryResponse);
     }
 
     // ================= UPDATE =================

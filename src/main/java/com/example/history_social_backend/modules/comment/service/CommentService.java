@@ -13,6 +13,8 @@ import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
 import com.example.history_social_backend.modules.comment.message.CommentCreatedMessage;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
+import com.example.history_social_backend.modules.post.service.PostService;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import java.util.UUID;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final PostService postService;
     private final CommentMapper commentMapper;
     private final RedisEventProducer eventProducer;
 
@@ -42,6 +45,9 @@ public class CommentService {
     public ApiResponse<CommentResponse> createComment(CommentRequest request) {
 
         UUID authorId = SecurityUtils.getCurrentUserId();
+        UUID postId = request.getPostId();
+
+        postService.increaseCommentCount(postId);
 
         Comment comment = new Comment();
         comment.setPostId(request.getPostId());

@@ -4,7 +4,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -48,6 +51,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.email = :email")
     Optional<User> findByEmailWithRole(@Param("email") String email);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.id IN :ids")
+    List<User> findUsersWithProfileByIds(@Param("ids") Set<UUID> ids);
+
 }
 
 // Optional chỉ trả về 1 bản ghi còn bảng join với nó nếu trả về nhiều bản ghi

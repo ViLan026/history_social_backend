@@ -4,6 +4,7 @@ import com.example.history_social_backend.common.messaging.model.EventType;
 import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
+import com.example.history_social_backend.modules.post.service.PostService;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
 import com.example.history_social_backend.modules.reaction.domain.ReactionType;
 import com.example.history_social_backend.modules.reaction.dto.request.ReactionRequest;
@@ -40,6 +41,7 @@ public class ReactionService {
     private final ReactionRepository reactionRepository;
     private final RedisEventProducer eventProducer;
     private final UserService userService;
+    private final PostService postService;
 
     @Transactional
     public ReactionType toggleReaction(ReactionRequest request) {
@@ -61,6 +63,7 @@ public class ReactionService {
             newReaction.setType(newType);
 
             reactionRepository.save(newReaction);
+            postService.increaseReactionCount(postId);
 
             // Publish event CHỈ khi tạo reaction mới
             // eventPublisher.publishEvent(new ReactionAddedEvent(
@@ -86,6 +89,7 @@ public class ReactionService {
 
         } else {
             // xóa react
+            postService.decreaseReactionCount(postId);
             reactionRepository.delete(existingReaction);
             return null;
         }

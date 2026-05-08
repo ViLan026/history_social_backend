@@ -21,7 +21,6 @@ public class PostSummaryResponse {
     PostStatus status;
     String content;
     long viewCount;
-    String thumbnailUrl; // URL ảnh đại diện (media đầu tiên)
     Set<TagResponse> tags;
     LocalDateTime createdAt;
 }

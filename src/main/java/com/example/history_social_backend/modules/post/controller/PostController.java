@@ -5,8 +5,10 @@ import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
+import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostSummaryResponse;
+import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class PostController {
 
     private final PostService postService;
+    private final PostQueryService postQueryService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -34,7 +37,6 @@ public class PostController {
             @RequestPart("post") @Valid PostCreationRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        
         PostResponse response = postService.createPost(request, files);
 
         return ApiResponse.success(response);
@@ -43,36 +45,36 @@ public class PostController {
     // xem chi tiết bài viết 
     @GetMapping("/{id}")
     public ApiResponse<PostResponse> getPost(@PathVariable UUID id) {
-        return ApiResponse.success(postService.getPostById(id));
+        return ApiResponse.success(postQueryService.getPostById(id));
     }
 
 
     // trang chủ hoặc trending 
     @GetMapping
-    public ApiResponse<PageResponse<PostSummaryResponse>> getPublishedPosts(
+    public ApiResponse<PageResponse<FeedPostResponse>> getPublishedPosts(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
 
-        Page<PostSummaryResponse> pageData = postService.getPublishedPosts(pageable);
+        Page<FeedPostResponse> pageData = postQueryService.getPublishedPosts(pageable);
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
     // xem danh sách bài viết của một tác giả nào đó 
     @GetMapping("/author/{authorId}")
-    public ApiResponse<PageResponse<PostSummaryResponse>> getPostsByAuthor(
+    public ApiResponse<PageResponse<FeedPostResponse>> getPostsByAuthor(
             @PathVariable UUID authorId,
             @PageableDefault(size = 10) Pageable pageable) {
 
-        Page<PostSummaryResponse> pageData = postService.getPostsByAuthor(authorId, pageable);
+        Page<FeedPostResponse> pageData = postQueryService.getPostsByAuthor(authorId, pageable);
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
     // 
     @GetMapping("/search")
-    public ApiResponse<PageResponse<PostSummaryResponse>> searchPosts(
+    public ApiResponse<PageResponse<FeedPostResponse>> searchPosts(
             @RequestParam String keyword,
             @PageableDefault(size = 10) Pageable pageable) {
 
-        Page<PostSummaryResponse> pageData = postService.searchPosts(keyword, pageable);
+        Page<FeedPostResponse> pageData = postQueryService.searchPosts(keyword, pageable);
         return ApiResponse.success(PageResponse.from(pageData));
     }
 

@@ -34,14 +34,18 @@ public class PostQueryService {
     private final UserService userService;
 
     @Transactional
-    public PostResponse getPostById(UUID id) {
+    public FeedPostResponse getPostById(UUID id) {
         Post post = postRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        post.getSources().size();
+        UserReactionResponse authorSummary = userService.getUserInfo(post.getAuthorId());
 
         postRepository.incrementViewCount(id);
-        return postMapper.toPostResponse(post);
+
+        FeedPostResponse response = postMapper.toFeedPostResponse(post);
+        response.setAuthor(authorSummary);
+
+        return response;
     }
 
     @Transactional(readOnly = true)

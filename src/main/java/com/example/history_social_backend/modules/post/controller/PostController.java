@@ -44,7 +44,7 @@ public class PostController {
 
     // xem chi tiết bài viết 
     @GetMapping("/{id}")
-    public ApiResponse<PostResponse> getPost(@PathVariable UUID id) {
+    public ApiResponse<FeedPostResponse> getPost(@PathVariable UUID id) {
         return ApiResponse.success(postQueryService.getPostById(id));
     }
 

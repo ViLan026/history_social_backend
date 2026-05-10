@@ -14,8 +14,6 @@ import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.modules.post.domain.Post;
 import com.example.history_social_backend.modules.post.domain.PostStatus;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
-import com.example.history_social_backend.modules.post.dto.response.PostResponse;
-import com.example.history_social_backend.modules.post.dto.response.PostSummaryResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;

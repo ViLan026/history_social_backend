@@ -75,6 +75,10 @@ public enum ErrorCode {
     // --------------- Modules.OnThisDay -------------------
     ON_THIS_DAY_NOT_FOUND(6001, "Không tìm thấy sự kiện ngày này năm xưa", HttpStatus.NOT_FOUND),
 
+    // module.report
+    REPORT_NOT_FOUND(7001, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
+    REPORT_ALREADY_EXISTS(7002, "Bạn đã báo cáo nội dung này trước đó", HttpStatus.BAD_REQUEST),
+
     ;
 
     private final int code;

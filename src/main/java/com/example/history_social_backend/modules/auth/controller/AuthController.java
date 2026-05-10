@@ -59,21 +59,28 @@ public class AuthController {
                         .timestamp(LocalDateTime.now())
                         .build());
     }
-// Backend yêu cầu browser lưu cookie thông qua header Set-Cookie
+
+    // Backend yêu cầu browser lưu cookie thông qua header Set-Cookie
     private void addAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
+        ResponseCookie accessCookie = ResponseCookie.from("access_token",
+                accessToken)
                 .httpOnly(true)
                 .secure(false) // có thể gửi cookie qua HTTP (không bắt buộc phải là HTTPS)
+                // .secure(true)
                 .path("/")
                 .sameSite("Lax")
+                // .sameSite("None")
                 .maxAge(Duration.ofMinutes(2))
                 .build();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token",
+                refreshToken)
                 .httpOnly(true)
                 .secure(false)
+                // .secure(true)
                 .path("/")
                 .sameSite("Lax")
+                // .sameSite("None")
                 .maxAge(Duration.ofDays(7))
                 .build();
 
@@ -101,16 +108,20 @@ public class AuthController {
         ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
                 .secure(false)
+                // .secure(true)
                 .path("/")
                 .sameSite("Lax")
+                // .sameSite("None")
                 .maxAge(0)
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(false)
+                // .secure(true)
                 .path("/")
                 .sameSite("Lax")
+                // .sameSite("None")
                 .maxAge(0)
                 .build();
 

@@ -1,0 +1,30 @@
+package com.example.history_social_backend.modules.report.repository;
+
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.history_social_backend.modules.report.domain.Report;
+import com.example.history_social_backend.modules.report.domain.ReportStatus;
+import com.example.history_social_backend.modules.report.domain.ReportTargetType;
+
+public interface ReportRepository extends JpaRepository<Report, UUID> {
+
+    boolean existsByReporterIdAndTargetTypeAndTargetId(
+            UUID reporterId,
+            ReportTargetType targetType,
+            UUID targetId
+    );
+
+    long countByTargetTypeAndTargetId(
+            ReportTargetType targetType,
+            UUID targetId
+    );
+
+    Page<Report> findByStatus(
+            ReportStatus status,
+            Pageable pageable
+    );
+}

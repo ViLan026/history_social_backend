@@ -16,6 +16,7 @@ import com.example.history_social_backend.modules.post.domain.PostStatus;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
+import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.service.UserService;
 
@@ -30,6 +31,10 @@ public class PostQueryService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserService userService;
+
+    public boolean existsById(UUID id) {
+        return postRepository.existsById(id);
+    }
 
     @Transactional
     public FeedPostResponse getPostById(UUID id) {
@@ -90,6 +95,36 @@ public class PostQueryService {
     public Page<FeedPostResponse> searchPosts(String keyword, Pageable pageable) {
         return postRepository.searchByKeyword(keyword, pageable)
                 .map(postMapper::toFeedPostResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public TargetPreviewResponse getPostPreviewForModeration(UUID postId) {
+        // Tìm post bao gồm cả bài đã bị xóa mềm (cho admin review)
+        Post post = postRepository.findPostIncludingDeleted(postId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết với ID: " + postId));
+
+        if (post == null) {
+            return null; // Post đã bị xóa hoàn toàn hoặc không tồn tại
+        }
+
+        // Lấy thông tin author
+        String authorName = userService.getUserNameById(post.getAuthorId());
+
+        // Tạo preview content (giới hạn 500 ký tự)
+        String contentPreview = post.getContent();
+        if (contentPreview != null && contentPreview.length() > 500) {
+            contentPreview = contentPreview.substring(0, 500) + "...";
+        }
+
+        return TargetPreviewResponse.builder()
+                .id(post.getId())
+                .content(contentPreview)
+                .authorId(post.getAuthorId())
+                .authorName(authorName)
+                .isDeleted(post.getDeletedAt() != null)
+                .isHiddenByAdmin(false) // TODO: Implement khi có feature hide by admin
+                .isHiddenByAuthor(post.getStatus() == PostStatus.DRAFT || post.getStatus() == PostStatus.HIDDEN)
+                .build();
     }
 
 }

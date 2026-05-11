@@ -19,17 +19,21 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReportResponse {
+public class MyReportResponse {
 
     UUID id;
-    UUID reporterId;
     ReportTargetType targetType;
     UUID targetId;
     ReportReasonType reasonType;
     String reasonText;
     ReportStatus status;
-    UUID reviewedBy;
-    LocalDateTime reviewedAt;
     LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    
+    // Thông tin về target (nếu còn tồn tại)
+    Boolean targetExists;
+    String targetStatus; // "ACTIVE", "HIDDEN_BY_ADMIN", "HIDDEN_BY_AUTHOR", "DELETED"
+    String targetContentPreview; // Preview nội dung (nếu có quyền xem)
+    
+    // Chỉ hiển thị cho chủ bài viết bị báo cáo
+    Boolean isMyContentReported; // true nếu đây là báo cáo về nội dung của user
 }

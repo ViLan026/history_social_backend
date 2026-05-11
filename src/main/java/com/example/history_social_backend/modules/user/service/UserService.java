@@ -53,6 +53,11 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public String getUserNameById(UUID id){
+        String name = userRepository.findByUsername(id);
+    }
+
+    @Transactional(readOnly = true)
     public Page<UserSummaryResponse> getAllUsers(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "createdAt"));

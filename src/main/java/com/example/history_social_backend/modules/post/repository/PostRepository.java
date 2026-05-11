@@ -54,4 +54,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Modifying
     @Query("UPDATE Post p SET p.reactionCount = p.reactionCount - 1 WHERE p.id = :id")
     void decrementReactionCount(UUID id);
+
+    @Query(value = "SELECT * FROM posts WHERE id = :postId", nativeQuery = true)
+    Optional<Post> findPostIncludingDeleted(@Param("postId") UUID postId);
 }

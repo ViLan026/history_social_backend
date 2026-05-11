@@ -4,7 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -54,6 +53,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.id IN :ids")
     List<User> findUsersWithProfileByIds(@Param("ids") Set<UUID> ids);
+
+    @Query("SELECT p.username FROM User u INNER JOIN u.profile p WHERE u.id = :id")
+    String findUsernameByUserId(@Param("id") UUID id);
 
 }
 

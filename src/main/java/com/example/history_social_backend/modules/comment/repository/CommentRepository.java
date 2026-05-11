@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,4 +20,15 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
             AND c.deletedAt IS NULL
             """)
     Page<Comment> findByPostIdAndNotDeleted(@Param("postId") UUID postId, Pageable pageable);
+
+    @Query(value = "SELECT * FROM comments WHERE id = :commentId", nativeQuery = true)
+    Optional<CommentProjection> findByIdIncludingDeleted(@Param("commentId") UUID commentId);
+
+    interface CommentProjection {
+        UUID getId();
+        UUID getPostId();
+        UUID getAuthorId();
+        String getContent();
+        java.time.LocalDateTime getDeletedAt();
+    }
 }

@@ -59,10 +59,6 @@ public class PostService {
     @Lazy
     private PostService self;
 
-    public boolean existsById(UUID id) {
-        return postRepository.existsById(id);
-    }
-
     // ================= CREATE =================
     // flow: Upload file → Validate → Resolve Tag → Create Post → Attach relations →
     // Save → Publish event

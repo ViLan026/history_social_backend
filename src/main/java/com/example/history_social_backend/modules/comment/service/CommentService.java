@@ -118,6 +118,10 @@ public class CommentService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
+
+        public boolean existsById(UUID id) {
+        return commentRepository.existsById(id);
+    }
     // private double calculateActionWeight(String actionType, LocalDateTime
     // createdAt) {
     // double base = switch (actionType) {

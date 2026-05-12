@@ -15,11 +15,7 @@ import com.example.history_social_backend.modules.report.domain.ReportTargetType
 @Repository
 public interface ReportRepository extends JpaRepository<Report, UUID> {
 
-    boolean existsByReporterIdAndTargetTypeAndTargetId(
-        UUID reporterId,
-        ReportTargetType targetType,
-        UUID targetId
-    );
+    boolean existsByReporterIdAndTargetTypeAndTargetId( UUID reporterId, ReportTargetType targetType, UUID targetId);
 
     long countByTargetTypeAndTargetId(ReportTargetType targetType, UUID targetId);
 

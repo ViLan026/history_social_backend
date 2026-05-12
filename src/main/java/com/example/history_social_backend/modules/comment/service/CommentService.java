@@ -14,6 +14,8 @@ import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
 import com.example.history_social_backend.modules.comment.message.CommentCreatedMessage;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
 import com.example.history_social_backend.modules.post.service.PostService;
+import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
+import com.example.history_social_backend.modules.user.service.UserService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -35,6 +37,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostService postService;
+    private final UserService userService;
     private final CommentMapper commentMapper;
     private final RedisEventProducer eventProducer;
 
@@ -122,21 +125,32 @@ public class CommentService {
         public boolean existsById(UUID id) {
         return commentRepository.existsById(id);
     }
-    // private double calculateActionWeight(String actionType, LocalDateTime
-    // createdAt) {
-    // double base = switch (actionType) {
-    // case "save" -> 3.0;
-    // case "comment" -> 2.5;
-    // case "like" -> 1.5;
-    // case "view" -> 0.8;
-    // case "dislike" -> -1.0;
-    // default -> 0.0;
-    // };
 
-    // // Time decay: tương tác càng mới càng quan trọng
-    // long hoursOld = ChronoUnit.HOURS.between(createdAt, LocalDateTime.now());
-    // double decay = Math.exp(-0.05 * hoursOld); // giảm dần theo thời gian
+    @Transactional(readOnly = true)
+    public TargetPreviewResponse getCommentPreviewForModeration(UUID commentId) {
+        return commentRepository.findByIdIncludingDeleted(commentId)
+            .map(projection -> {
+                String authorName = userService.getUserName(projection.getAuthorId());
+                
+                // Tạo preview content (giới hạn 300 ký tự cho comment)
+                String content = projection.getContent();
+                String contentPreview = content;
+                if (content != null && content.length() > 300) {
+                    contentPreview = content.substring(0, 300) + "...";
+                }
 
-    // return base * decay;
-    // }
+                return TargetPreviewResponse.builder()
+                    .id(projection.getId())
+                    .content(contentPreview)
+                    .authorId(projection.getAuthorId())
+                    .authorName(authorName)
+                    .isDeleted(projection.getDeletedAt() != null)
+                    .isHiddenByAdmin(false) 
+                    .isHiddenByAuthor(false) 
+                    .build();
+            })
+            .orElse(null);
+    }
 }
+
+

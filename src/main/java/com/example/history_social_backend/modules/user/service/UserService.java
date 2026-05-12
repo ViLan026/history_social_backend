@@ -53,8 +53,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public String getUserNameById(UUID id){
-        String name = userRepository.findByUsername(id);
+    public String getUserName(UUID id){
+        String name = userRepository.findUsernameByUserId(id);
+        return name;
     }
 
     @Transactional(readOnly = true)

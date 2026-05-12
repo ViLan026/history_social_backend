@@ -31,5 +31,5 @@ public class OnThisDay extends BaseEntity {
     String description;
 
     @Column(columnDefinition = "TEXT")
-    String note;
+    String title;
 }

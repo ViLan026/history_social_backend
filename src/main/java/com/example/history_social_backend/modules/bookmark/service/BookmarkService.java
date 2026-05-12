@@ -9,7 +9,7 @@ import com.example.history_social_backend.modules.bookmark.dto.response.Bookmark
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkToggleResponse;
 import com.example.history_social_backend.modules.bookmark.mapper.BookmarkMapper;
 import com.example.history_social_backend.modules.bookmark.repository.BookmarkRepository;
-import com.example.history_social_backend.modules.post.service.PostService;
+import com.example.history_social_backend.modules.post.service.PostQueryService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ import java.util.UUID;
 public class BookmarkService {
 
     BookmarkRepository bookmarkRepository;
-    PostService postService;
+    PostQueryService postQueryService;
     BookmarkMapper bookmarkMapper;
 
     @Transactional
@@ -38,7 +38,7 @@ public class BookmarkService {
         UUID userId = SecurityUtils.getCurrentUserId();
 
         //  check tồn tại
-        if (!postService.existsById(postId)) {
+        if (!postQueryService.existsById(postId)) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
 

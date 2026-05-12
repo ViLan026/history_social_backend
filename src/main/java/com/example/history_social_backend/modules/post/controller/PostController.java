@@ -7,7 +7,6 @@ import com.example.history_social_backend.modules.post.dto.request.PostCreationR
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
-import com.example.history_social_backend.modules.post.dto.response.PostSummaryResponse;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.post.service.PostService;
 import jakarta.validation.Valid;

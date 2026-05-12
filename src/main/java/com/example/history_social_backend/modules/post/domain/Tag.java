@@ -34,7 +34,7 @@ public class Tag extends BaseEntity {
     String description;
 
     @Builder.Default
-    @Column(name = "usage_count", nullable = false)
+    @Column(name = "usage_count")
     Integer usageCount = 0;
 
     @PrePersist

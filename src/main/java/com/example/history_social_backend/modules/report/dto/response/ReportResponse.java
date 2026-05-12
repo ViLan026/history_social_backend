@@ -31,5 +31,5 @@ public class ReportResponse {
     UUID reviewedBy;
     LocalDateTime reviewedAt;
     LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    LocalDateTime updatedAt;    
 }

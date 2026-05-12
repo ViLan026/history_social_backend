@@ -17,14 +17,14 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(ApiPaths.API_V1)
+@RequestMapping(ApiPaths.ONTHISDAY)
 @RequiredArgsConstructor
 public class OnThisDayController {
 
     private final OnThisDayService service;
 
     // GET /api/onthisday/today
-    @GetMapping("/onthisday/today")
+    @GetMapping("/today")
     public ApiResponse<List<OnThisDayResponse>> getTodayEvents() {
         List<OnThisDayResponse> data = service.getTodayEvents();
         return ApiResponse.success("Lấy sự kiện ngày này năm xưa thành công", data);
@@ -32,7 +32,7 @@ public class OnThisDayController {
 
     // GET /api/admin/onthisday
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/onthisday")
+    @GetMapping("/days")
     public ApiResponse<PageResponse<OnThisDayResponse>> getAll(
             @PageableDefault(size = 20, sort = "eventDate") Pageable pageable) {
 
@@ -42,7 +42,7 @@ public class OnThisDayController {
 
     // Admin - Tạo mới sự kiện
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/onthisday")
+    @PostMapping("/onthisday")
     public ApiResponse<OnThisDayResponse> create(
             @Valid @RequestBody OnThisDayRequest request) {
 
@@ -52,7 +52,7 @@ public class OnThisDayController {
 
     // Admin - Cập nhật sự kiện
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/admin/onthisday/{id}")
+    @PutMapping("/onthisday/{id}")
     public ApiResponse<OnThisDayResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody OnThisDayRequest request) {

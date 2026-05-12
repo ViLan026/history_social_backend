@@ -108,7 +108,7 @@ public class PostQueryService {
         }
 
         // Lấy thông tin author
-        String authorName = userService.getUserNameById(post.getAuthorId());
+        String authorName = userService.getUserName(post.getAuthorId());
 
         // Tạo preview content (giới hạn 500 ký tự)
         String contentPreview = post.getContent();

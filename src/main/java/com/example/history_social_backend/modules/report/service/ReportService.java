@@ -1,8 +1,6 @@
 package com.example.history_social_backend.modules.report.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -18,7 +16,6 @@ import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.comment.service.CommentService;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
-import com.example.history_social_backend.modules.post.service.PostService;
 import com.example.history_social_backend.modules.report.domain.Report;
 import com.example.history_social_backend.modules.report.domain.ReportStatus;
 import com.example.history_social_backend.modules.report.domain.ReportTargetType;
@@ -30,7 +27,6 @@ import com.example.history_social_backend.modules.report.dto.response.ReportResp
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
 import com.example.history_social_backend.modules.report.mapper.ReportMapper;
 import com.example.history_social_backend.modules.report.repository.ReportRepository;
-import com.example.history_social_backend.modules.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,15 +39,13 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final ReportMapper reportMapper;
     private final PostQueryService postQueryService;
-    private final UserService userService;
     private final CommentService commentService;
-    private final PostService postService;
 
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
-        // Validate target exists
+        // check xem bài viết hoặc comment bị báo cáo có tồn tại không 
         validateTargetExists(request.getTargetType(), request.getTargetId());
 
         // Check duplicate report
@@ -89,7 +83,7 @@ public class ReportService {
         Page<Report> myCreatedReports = reportRepository.findByReporterId(currentUserId, pageable);
         
         // Lấy các báo cáo về nội dung của user
-        Page<Report> reportsOnMyContent = reportRepository.findByTargetId(currentUserId, pageable);
+        // Page<Report> reportsOnMyContent = reportRepository.findByTargetId(currentUserId, pageable);
 
         // Combine và xử lý
         Page<MyReportResponse> responsePage = myCreatedReports.map(report -> 
@@ -99,7 +93,7 @@ public class ReportService {
         return PageResponse.from(responsePage);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)          
     public PageResponse<ModerationReportResponse> getPendingReports(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
         Page<Report> reports = reportRepository.findByStatus(ReportStatus.PENDING, pageable);

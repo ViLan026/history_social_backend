@@ -188,3 +188,11 @@ INSERT INTO public.refresh_token (id, created_at, updated_at, expiry_time, revok
 ON CONFLICT (id) DO NOTHING;
 
 COMMIT;
+
+
+
+
+
+
+
+

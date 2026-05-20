@@ -39,7 +39,6 @@ public class BookmarkResponse {
         AuthorInfo author;
 
         // Post statistics
-        long viewCount;
         long likeCount;
         long commentCount;
     }

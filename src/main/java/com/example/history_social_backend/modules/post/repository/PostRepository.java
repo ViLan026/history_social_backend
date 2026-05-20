@@ -39,9 +39,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Page<Post> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     // Tăng view count bằng UPDATE trực tiếp, tránh load entity.
-    @Modifying
-    @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
-    void incrementViewCount(@Param("id") UUID id);
 
     @Modifying
     @Query("UPDATE Post p SET p.commentCount = p.commentCount + 1 WHERE p.id = :id")

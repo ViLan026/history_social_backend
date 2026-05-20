@@ -20,7 +20,6 @@ public class PostSummaryResponse {
     UUID authorId;
     PostStatus status;
     String content;
-    long viewCount;
     Set<TagResponse> tags;
     LocalDateTime createdAt;
 }

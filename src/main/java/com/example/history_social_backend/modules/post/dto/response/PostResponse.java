@@ -22,7 +22,6 @@ public class PostResponse {
     String content;
     UUID authorId;
     PostStatus status;
-    long viewCount;
     List<PostMediaResponse> mediaList;
     Set<PostSourceResponse> sources;
     Set<TagResponse> tags;

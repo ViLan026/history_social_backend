@@ -18,7 +18,7 @@ import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
-import com.example.history_social_backend.modules.user.service.UserService;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
 
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PostQueryService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
-    private final UserService userService;
+    private final UserQueryService userQueryService;
 
     public boolean existsById(UUID id) {
         return postRepository.existsById(id);
@@ -41,9 +41,7 @@ public class PostQueryService {
         Post post = postRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        UserReactionResponse authorSummary = userService.getUserInfo(post.getAuthorId());
-
-        postRepository.incrementViewCount(id);
+        UserReactionResponse authorSummary = userQueryService.getUserInfo(post.getAuthorId());
 
         FeedPostResponse response = postMapper.toFeedPostResponse(post);
         response.setAuthor(authorSummary);
@@ -64,7 +62,7 @@ public class PostQueryService {
                 .map(Post::getAuthorId)
                 .collect(Collectors.toSet());
 
-        Map<UUID, UserReactionResponse> userMap = userService.getUserReactionInfoMap(authorIds);
+        Map<UUID, UserReactionResponse> userMap = userQueryService.getUserReactionInfoMap(authorIds);
 
         return posts.map(post -> {
             FeedPostResponse response = postMapper.toFeedPostResponse(post);
@@ -83,7 +81,7 @@ public class PostQueryService {
             return posts.map(postMapper::toFeedPostResponse);
         }
 
-        UserReactionResponse authorSummary = userService.getUserInfo(authorId);
+        UserReactionResponse authorSummary = userQueryService.getUserInfo(authorId);
         return posts.map(post -> {
             FeedPostResponse response = postMapper.toFeedPostResponse(post);
             response.setAuthor(authorSummary);
@@ -108,7 +106,7 @@ public class PostQueryService {
         }
 
         // Lấy thông tin author
-        String authorName = userService.getUserName(post.getAuthorId());
+        String authorName = userQueryService.getUserName(post.getAuthorId());
 
         // Tạo preview content (giới hạn 500 ký tự)
         String contentPreview = post.getContent();
@@ -122,9 +120,24 @@ public class PostQueryService {
                 .authorId(post.getAuthorId())
                 .authorName(authorName)
                 .isDeleted(post.getDeletedAt() != null)
-                .isHiddenByAdmin(false) // TODO: Implement khi có feature hide by admin
+                .isHiddenByAdmin(false)
                 .isHiddenByAuthor(post.getStatus() == PostStatus.DRAFT || post.getStatus() == PostStatus.HIDDEN)
                 .build();
+    }
+
+    @Transactional
+    public void increaseCommentCount(UUID postId) {
+        postRepository.incrementCommentCount(postId);
+    }
+
+    @Transactional
+    public void increaseReactionCount(UUID postId) {
+        postRepository.incrementReactionCount(postId);
+    }
+
+    @Transactional
+    public void decreaseReactionCount(UUID postId) {
+        postRepository.decrementReactionCount(postId);
     }
 
 }

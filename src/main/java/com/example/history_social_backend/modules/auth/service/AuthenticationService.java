@@ -15,6 +15,7 @@ import com.example.history_social_backend.modules.auth.repository.RefreshTokenRe
 import com.example.history_social_backend.modules.user.domain.User;
 import com.example.history_social_backend.modules.user.dto.request.UserCreationRequest;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
 import com.example.history_social_backend.modules.user.service.UserService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
@@ -35,6 +36,7 @@ public class AuthenticationService {
     PasswordEncoder passwordEncoder;
     JwtService jwtService;
     UserService userService;
+    UserQueryService userQueryService;
     RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
@@ -57,7 +59,7 @@ public class AuthenticationService {
     }
 
     public TokenPair login(AuthenticationRequest request) {
-        User user = userService.findByEmail(request.getEmail());
+        User user = userQueryService.findByEmail(request.getEmail());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -139,7 +141,7 @@ public class AuthenticationService {
             stored.setRevoked(true);
             refreshTokenRepository.save(stored);
 
-            User user = userService.findById(
+            User user = userQueryService.findById(
                     stored.getUserId());
 
             String newAccess = jwtService.generateAccessToken(user);

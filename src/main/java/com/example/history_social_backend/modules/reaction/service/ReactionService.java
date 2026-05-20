@@ -4,7 +4,7 @@ import com.example.history_social_backend.common.messaging.model.EventType;
 import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
-import com.example.history_social_backend.modules.post.service.PostService;
+import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
 import com.example.history_social_backend.modules.reaction.domain.ReactionType;
 import com.example.history_social_backend.modules.reaction.dto.request.ReactionRequest;
@@ -14,7 +14,7 @@ import com.example.history_social_backend.modules.reaction.dto.response.Reaction
 import com.example.history_social_backend.modules.reaction.message.ReactionAddedMessage;
 import com.example.history_social_backend.modules.reaction.repository.ReactionRepository;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
-import com.example.history_social_backend.modules.user.service.UserService;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +40,8 @@ public class ReactionService {
 
     private final ReactionRepository reactionRepository;
     private final RedisEventProducer eventProducer;
-    private final UserService userService;
-    private final PostService postService;
+    private final UserQueryService userQueryService;
+    private final PostQueryService postQueryService;
 
     @Transactional
     public ReactionType toggleReaction(ReactionRequest request) {
@@ -63,7 +63,7 @@ public class ReactionService {
             newReaction.setType(newType);
 
             reactionRepository.save(newReaction);
-            postService.increaseReactionCount(postId);
+            postQueryService.increaseReactionCount(postId);
 
             // Publish event CHỈ khi tạo reaction mới
             // eventPublisher.publishEvent(new ReactionAddedEvent(
@@ -89,7 +89,7 @@ public class ReactionService {
 
         } else {
             // xóa react
-            postService.decreaseReactionCount(postId);
+            postQueryService.decreaseReactionCount(postId);
             reactionRepository.delete(existingReaction);
             return null;
         }
@@ -139,7 +139,7 @@ public class ReactionService {
                 .map(Reaction::getUserId)
                 .collect(Collectors.toSet());
 
-        Map<UUID, UserReactionResponse> userInfoMap = userService.getUserReactionInfoMap(userIds);
+        Map<UUID, UserReactionResponse> userInfoMap = userQueryService.getUserReactionInfoMap(userIds);
 
         // Map sang DTO
         Page<ReactionDetailResponse> detailsPage = reactionPage.map(reaction -> {

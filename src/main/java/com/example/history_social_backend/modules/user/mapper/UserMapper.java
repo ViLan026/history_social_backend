@@ -21,7 +21,7 @@ public interface UserMapper {
     @Mapping(target = "userId", source = "profile.user.id")
     ProfileResponse toProfileResponse(Profile profile);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

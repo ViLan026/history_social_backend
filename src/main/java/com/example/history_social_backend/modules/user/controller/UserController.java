@@ -9,6 +9,7 @@ import com.example.history_social_backend.modules.user.dto.request.UserCreationR
 import com.example.history_social_backend.modules.user.dto.request.UserUpdateRequest;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserSummaryResponse;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
 import com.example.history_social_backend.modules.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final UserQueryService userQueryService;
 
     @GetMapping
     public PageResponse<UserSummaryResponse> getAllUsers(
@@ -39,7 +41,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getUserById(@PathVariable UUID id) {
-        return ApiResponse.success(userService.getUserById(id));
+        return ApiResponse.success(userQueryService.getUserById(id));
     }
 
     @GetMapping("/me")

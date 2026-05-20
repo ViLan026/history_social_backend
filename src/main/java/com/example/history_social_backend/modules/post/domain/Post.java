@@ -65,29 +65,25 @@ public class Post extends BaseEntity {
     @Builder.Default
     Set<PostTag> postTags = new HashSet<>();
 
-    @Column(name = "view_count")
-    @Builder.Default
-    Long viewCount = 0L;
-
-    @Column(name = "comment_count")
+    @Column(name = "comment_count", nullable = false)
     @Builder.Default
     Long commentCount = 0L;
 
-    @Column(name = "reaction_count")
+    @Column(name = "reaction_count", nullable = false)
     @Builder.Default
     Long reactionCount = 0L;
 
-    // Float feed_score;
-    // Float trending_score;
+    @Column(name = "bookmark_count ", nullable = false)
+    @Builder.Default
+    Long bookmarkCount  = 0L;
 
-    // @Column(name = "visibility_label", length = 50)
-    // String visibilityLabel;
+    @Column(name = "report_count ", nullable = false)
+    @Builder.Default
+    Long reportCount  = 0L;
 
-    // @Column(columnDefinition = "TEXT")
-    // String summary;
-
-    // @Column(name = "embedding", columnDefinition = "vector(768)")
-    // float[] embedding;
+    @Column(name = "quality_score  ", nullable = false)
+    @Builder.Default
+    double qualityScore   = 0.5;
 
     LocalDateTime deletedAt;
 

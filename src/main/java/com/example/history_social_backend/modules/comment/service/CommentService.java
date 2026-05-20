@@ -13,9 +13,9 @@ import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
 import com.example.history_social_backend.modules.comment.message.CommentCreatedMessage;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
-import com.example.history_social_backend.modules.post.service.PostService;
+import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
-import com.example.history_social_backend.modules.user.service.UserService;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -35,9 +35,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommentService {
 
+    private final PostQueryService postQueryService;
     private final CommentRepository commentRepository;
-    private final PostService postService;
-    private final UserService userService;
+    private final UserQueryService userQueryService;
     private final CommentMapper commentMapper;
     private final RedisEventProducer eventProducer;
 
@@ -50,7 +50,7 @@ public class CommentService {
         UUID authorId = SecurityUtils.getCurrentUserId();
         UUID postId = request.getPostId();
 
-        postService.increaseCommentCount(postId);
+        postQueryService.increaseCommentCount(postId);
 
         Comment comment = new Comment();
         comment.setPostId(request.getPostId());
@@ -121,36 +121,33 @@ public class CommentService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
-
-        public boolean existsById(UUID id) {
+    public boolean existsById(UUID id) {
         return commentRepository.existsById(id);
     }
 
     @Transactional(readOnly = true)
     public TargetPreviewResponse getCommentPreviewForModeration(UUID commentId) {
         return commentRepository.findByIdIncludingDeleted(commentId)
-            .map(projection -> {
-                String authorName = userService.getUserName(projection.getAuthorId());
-                
-                // Tạo preview content (giới hạn 300 ký tự cho comment)
-                String content = projection.getContent();
-                String contentPreview = content;
-                if (content != null && content.length() > 300) {
-                    contentPreview = content.substring(0, 300) + "...";
-                }
+                .map(projection -> {
+                    String authorName = userQueryService.getUserName(projection.getAuthorId());
 
-                return TargetPreviewResponse.builder()
-                    .id(projection.getId())
-                    .content(contentPreview)
-                    .authorId(projection.getAuthorId())
-                    .authorName(authorName)
-                    .isDeleted(projection.getDeletedAt() != null)
-                    .isHiddenByAdmin(false) 
-                    .isHiddenByAuthor(false) 
-                    .build();
-            })
-            .orElse(null);
+                    // Tạo preview content (giới hạn 300 ký tự cho comment)
+                    String content = projection.getContent();
+                    String contentPreview = content;
+                    if (content != null && content.length() > 300) {
+                        contentPreview = content.substring(0, 300) + "...";
+                    }
+
+                    return TargetPreviewResponse.builder()
+                            .id(projection.getId())
+                            .content(contentPreview)
+                            .authorId(projection.getAuthorId())
+                            .authorName(authorName)
+                            .isDeleted(projection.getDeletedAt() != null)
+                            .isHiddenByAdmin(false)
+                            .isHiddenByAuthor(false)
+                            .build();
+                })
+                .orElse(null);
     }
 }
-
-

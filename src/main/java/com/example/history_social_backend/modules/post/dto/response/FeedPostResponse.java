@@ -22,7 +22,6 @@ public class FeedPostResponse {
     UUID postId;
     String content;
     String title;
-    Long viewCount;
     Long reactionCount;
     Long commentCount;
     PostStatus status;

@@ -59,7 +59,7 @@ public class PostService {
     @Lazy
     private PostService self;
 
-    // ================= CREATE =================
+    //  CREATE 
     // flow: Upload file → Validate → Resolve Tag → Create Post → Attach relations →
     // Save → Publish event
 
@@ -152,7 +152,7 @@ public class PostService {
         return savedPost;
     }
 
-    // ================= UPDATE =================
+    //  UPDATE 
     // Flow: Upload → Transaction DB → After commit → delete file cũ → If fail →
     // rollback file mới
     public PostResponse updatePost(UUID postId, PostUpdateRequest request, List<MultipartFile> newFiles) {
@@ -281,7 +281,7 @@ public class PostService {
 
     }
 
-    // ================= DELETE =================
+    //  DELETE 
 
     @Transactional
     public void deletePost(UUID postId, UUID currentUserId) {
@@ -325,7 +325,7 @@ public class PostService {
         log.info("Post deleted: postId={}, by={}", postId, currentUserId);
     }
 
-    // ================= PRIVATE HELPERS =================
+    //  PRIVATE HELPERS 
 
     private List<UploadResult> uploadFilesConcurrentlyWithRollback(List<MultipartFile> files, String folderName) {
         if (CollectionUtils.isEmpty(files)) {
@@ -412,19 +412,5 @@ public class PostService {
     }
 
 
-    @Transactional
-    public void increaseCommentCount(UUID postId) {
-        postRepository.incrementCommentCount(postId);
-    }
 
-    @Transactional
-    public void increaseReactionCount(UUID postId) {
-        postRepository.incrementReactionCount(postId);
-    }
-
-
-    @Transactional
-    public void decreaseReactionCount(UUID postId) {
-        postRepository.decrementReactionCount(postId);
-    }
 }

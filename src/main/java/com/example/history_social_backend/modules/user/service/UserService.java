@@ -10,7 +10,6 @@ import com.example.history_social_backend.modules.user.domain.User;
 import com.example.history_social_backend.modules.user.dto.request.ChangePasswordRequest;
 import com.example.history_social_backend.modules.user.dto.request.UserCreationRequest;
 import com.example.history_social_backend.modules.user.dto.request.UserUpdateRequest;
-import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserSummaryResponse;
 import com.example.history_social_backend.modules.user.mapper.UserMapper;
@@ -27,11 +26,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.example.history_social_backend.core.security.SecurityUtils;
 
@@ -45,18 +41,8 @@ public class UserService {
     private final RoleService roleService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserQueryService userQueryService;
 
-    @Transactional(readOnly = true)
-    public UserResponse getUserById(UUID id) {
-        User user = findUserWithDetails(id);
-        return userMapper.toResponse(user);
-    }
-
-    @Transactional(readOnly = true)
-    public String getUserName(UUID id){
-        String name = userRepository.findUsernameByUserId(id);
-        return name;
-    }
 
     @Transactional(readOnly = true)
     public Page<UserSummaryResponse> getAllUsers(int page, int size, String keyword) {
@@ -144,7 +130,7 @@ public class UserService {
 
     @Transactional
     public UserResponse updateUser(UUID id, UserUpdateRequest request) {
-        User user = findUserWithDetails(id);
+        User user = userQueryService.findUserWithDetails(id);
 
         // Ensure profile exists (defensive)
         if (user.getProfile() == null) {
@@ -190,55 +176,6 @@ public class UserService {
         return userMapper.toResponse(userRepository.save(user));
     }
 
-    // @Transactional
-    // public void deleteUser(UUID id) {
-    // if (!userRepository.existsById(id)) {
-    // throw new AppException(ErrorCode.USER_NOT_FOUND);
-    // }
-    // userRepository.deleteById(id);
-    // log.info("Deleted user id={}", id);
-    // }
 
-    private User findUserWithDetails(UUID id) {
-        return userRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    public User findById(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    public UUID getUserIdByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(User::getId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    // Trả về Map để Module Reaction dễ dàng lấy thông tin theo UUID
-    public Map<UUID, UserReactionResponse> getUserReactionInfoMap(Set<UUID> userIds) {
-        List<User> users = userRepository.findAllById(userIds);
-
-        return users.stream().collect(Collectors.toMap(
-                User::getId,
-                user -> UserReactionResponse.builder()
-                        .userId(user.getId())
-                        .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
-                        .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
-                        .build()));
-    }
-
-    public UserReactionResponse getUserInfo(UUID id){
-        User user = findById(id);
-        return UserReactionResponse.builder()
-                .userId(user.getId())
-                .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
-                .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
-                .build();
-    }
 }

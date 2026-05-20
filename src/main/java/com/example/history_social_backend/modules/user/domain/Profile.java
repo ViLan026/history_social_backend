@@ -22,7 +22,7 @@ public class Profile extends BaseEntity {
     @Id
     @UuidV7
     @Column(updatable = false, nullable = false, columnDefinition = "uuid")
-    UUID id;
+    UUID userId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

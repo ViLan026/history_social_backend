@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import com.example.history_social_backend.modules.post.domain.PostStatus;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -31,5 +32,8 @@ public class FeedPostResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     UserReactionResponse author;
+    // Double rankingScore;
+    @JsonIgnore
+    Double rankingScore;
 
 }

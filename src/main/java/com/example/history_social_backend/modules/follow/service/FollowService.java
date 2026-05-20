@@ -69,12 +69,10 @@ public class FollowService {
         Profile followingProfile = userQueryService.getProfileByUserId(followingId);
 
         followerProfile.setFollowingCount(
-                Math.max(0, followerProfile.getFollowingCount() - 1)
-        );
+                Math.max(0, followerProfile.getFollowingCount() - 1));
 
         followingProfile.setFollowerCount(
-                Math.max(0, followingProfile.getFollowerCount() - 1)
-        );
+                Math.max(0, followingProfile.getFollowerCount() - 1));
     }
 
     @Transactional(readOnly = true)
@@ -134,5 +132,13 @@ public class FollowService {
     @Transactional(readOnly = true)
     public boolean isFollowing(UUID followerId, UUID followingId) {
         return followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
+    }
+
+    public long countFollowers(UUID userId) {
+        return followRepository.countByFollowingId(userId);
+    }
+
+    public long countFollowing(UUID userId) {
+        return followRepository.countByFollowerId(userId);
     }
 }

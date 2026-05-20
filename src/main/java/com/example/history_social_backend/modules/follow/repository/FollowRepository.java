@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.follow.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -25,4 +26,7 @@ public interface FollowRepository
 
     Page<Follow> findAllByFollowingId(UUID followingId, Pageable pageable);
 
+    long countByFollowerId(UUID followerId);
+
+    long countByFollowingId(UUID followingId);
 }

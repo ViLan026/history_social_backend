@@ -44,6 +44,7 @@ public final class ApiPaths {
     public static final String REPORTS = API_V1 + "/reports";
 
     public static final String ONTHISDAY = API_V1 + "/onthisday";
+    public static final String FOLLOWS = API_V1 + "/follows";
 
     // Admin
     public static final String ADMIN = API_V1 + "/admin";

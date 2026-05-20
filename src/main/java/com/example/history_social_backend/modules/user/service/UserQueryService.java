@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.modules.user.domain.Profile;
 import com.example.history_social_backend.modules.user.domain.User;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
 import com.example.history_social_backend.modules.user.mapper.UserMapper;
+import com.example.history_social_backend.modules.user.repository.ProfileRepository;
 import com.example.history_social_backend.modules.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,12 +26,33 @@ import lombok.RequiredArgsConstructor;
 public class UserQueryService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
         User user = findUserWithDetails(id);
         return userMapper.toResponse(user);
+    }
+
+    public Profile getProfileByUserId(UUID userId) {
+
+        return profileRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROFILE_NOT_FOUND));
+    }
+
+    public void validateUserExists(UUID userId) {
+
+        if (!userRepository.existsById(userId)) {
+
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+    }
+
+    public Map<UUID, Profile> getProfilesByUserIds(List<UUID> userIds) {
+        return profileRepository.findAllByUserIdIn(userIds)
+                .stream()
+                .collect(Collectors.toMap(Profile::getUserId, profile -> profile));
     }
 
     @Transactional(readOnly = true)

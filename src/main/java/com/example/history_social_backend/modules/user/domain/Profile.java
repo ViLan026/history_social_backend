@@ -40,4 +40,12 @@ public class Profile extends BaseEntity {
 
     @Column(name = "bio", columnDefinition = "text")
     String bio;
+
+    @Column(name = "follower_count", nullable = false)
+    @Builder.Default
+    Long followerCount = 0L;
+
+    @Column(name = "following_count", nullable = false)
+    @Builder.Default
+    Long followingCount = 0L;
 }

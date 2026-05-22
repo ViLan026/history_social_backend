@@ -38,6 +38,8 @@ CREATE TABLE roles (
 	CONSTRAINT roles_pkey PRIMARY KEY (id)
 );
 
+
+
 CREATE TABLE app_permissions (
 	created_at timestamp(6) NOT NULL,
 	updated_at timestamp(6) NULL,
@@ -159,6 +161,21 @@ CREATE TABLE post_tags (
 );
 
 
+
+CREATE TABLE follows (
+	created_at timestamp(6) NOT NULL,
+	updated_at timestamp(6) NULL,
+	follower_id uuid NOT NULL,
+	following_id uuid NOT NULL,
+	id uuid NOT NULL,
+	CONSTRAINT follows_follower_id_following_id_key UNIQUE (follower_id, following_id),
+	CONSTRAINT follows_pkey PRIMARY KEY (id),
+	CONSTRAINT chk_follow_self CHECK (follower_id <> following_id),
+    CONSTRAINT fk_follows_follower FOREIGN KEY (follower_id)  REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_follows_following FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE bookmarks (
 	id uuid NOT NULL,
 	created_at timestamp(6) NOT NULL,
@@ -217,7 +234,7 @@ CREATE TABLE on_this_day (
 	event_date date NOT NULL,
 	title text NULL,
 	CONSTRAINT on_this_day_pkey PRIMARY KEY (id),
-	CONSTRAINT on_this_day_event_date_key UNIQUE (event_date),
+	CONSTRAINT on_this_day_event_date_key UNIQUE (event_date)
 );
 
 
@@ -254,7 +271,7 @@ CREATE TABLE reports (
 	CONSTRAINT reports_pkey PRIMARY KEY (id),
 	CONSTRAINT reports_reason_type_check CHECK (((reason_type)::text = ANY ((ARRAY['MISINFORMATION'::character varying, 'FAKE_HISTORY'::character varying, 'HATE_SPEECH'::character varying, 'VIOLENCE'::character varying, 'HARASSMENT'::character varying, 'SPAM'::character varying, 'INAPPROPRIATE'::character varying, 'OTHER'::character varying])::text[]))),
 	CONSTRAINT reports_status_check CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'RESOLVED'::character varying, 'DISMISSED'::character varying])::text[]))),
-	CONSTRAINT reports_target_type_check CHECK (((target_type)::text = ANY ((ARRAY['POST'::character varying, 'COMMENT'::character varying])::text[])))
+	CONSTRAINT reports_target_type_check CHECK (((target_type)::text = ANY ((ARRAY['POST'::character varying, 'COMMENT'::character varying])::text[]))),
     CONSTRAINT fk_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(id), 
     CONSTRAINT fk_reports_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id)
 );

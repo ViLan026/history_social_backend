@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,6 +34,18 @@ public class SecurityConfig {
     // danh sách các endpoint công khai, không cần login
     private final String[] PUBLIC_ENDPOINTS = {
             ApiPaths.AUTH + "/**",
+            ApiPaths.FOLLOWS + "/",
+            ApiPaths.ONTHISDAY + "/**",
+            ApiPaths.SEARCH + "/**",
+
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+
+            "/swagger-resources/**",
+            "/webjars/**"
     };
 
     @Autowired
@@ -48,6 +61,9 @@ public class SecurityConfig {
                 // .requestMatchers(org.springframework.http.HttpMethod.OPTIONS,
                 // "/**").permitAll()
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.GET, ApiPaths.POSTS + "/home").permitAll()
+                .requestMatchers(HttpMethod.GET, ApiPaths.USERS + "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, ApiPaths.COMMENTS + "/**").permitAll()
                 .anyRequest().authenticated());
         // server nhận JWT từ client. Ví dụ request: Authorization: Bearer dgdd....
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
@@ -71,7 +87,8 @@ public class SecurityConfig {
         // corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization",
         // "Content-Type", "X-Auth-Token"));
         corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
-        // corsConfiguration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+        // corsConfiguration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type",
+        // "Accept", "Authorization"));
         corsConfiguration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
         corsConfiguration.setAllowCredentials(true);
 

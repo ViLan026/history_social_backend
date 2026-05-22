@@ -15,9 +15,9 @@ public interface OnThisDayRepository extends JpaRepository<OnThisDay, java.util.
 
   @Query("""
       SELECT o FROM OnThisDay o
-      WHERE EXTRACT(MONTH FROM o.createdAt) = :month
-        AND EXTRACT(DAY FROM o.createdAt) = :day
-      ORDER BY o.createdAt ASC
+      WHERE EXTRACT(MONTH FROM o.eventDate) = :month
+        AND EXTRACT(DAY FROM o.eventDate) = :day
+      ORDER BY o.eventDate ASC
       """)
   List<OnThisDay> findEventsByMonthAndDay(@Param("month") int month, @Param("day") int day);
 }

@@ -152,6 +152,50 @@ public class PostQueryService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public Page<FeedPostResponse> getPublicPublishedPosts(Pageable pageable) {
+
+        Page<Post> posts = postRepository.findByStatus(
+                PostStatus.PUBLISHED,
+                pageable);
+
+        if (posts.isEmpty()) {
+            return posts.map(postMapper::toFeedPostResponse);
+        }
+
+        Set<UUID> authorIds = posts.getContent()
+                .stream()
+                .map(Post::getAuthorId)
+                .collect(Collectors.toSet());
+
+        Map<UUID, UserReactionResponse> userMap = userQueryService.getUserReactionInfoMap(authorIds);
+
+        List<FeedPostResponse> rankedContent = posts.getContent()
+                .stream()
+                .map(post -> {
+                    FeedPostResponse response = postMapper.toFeedPostResponse(post);
+
+                    response.setAuthor(userMap.get(post.getAuthorId()));
+
+                    double finalScore = feedRankingService.calculateFeedScore(
+                            post,
+                            null);
+
+                    response.setRankingScore(finalScore);
+
+                    return response;
+                })
+                .sorted(
+                        Comparator.comparingDouble(
+                                FeedPostResponse::getRankingScore).reversed())
+                .toList();
+
+        return new PageImpl<>(
+                rankedContent,
+                pageable,
+                posts.getTotalElements());
+    }
+
     @Transactional
     public void increaseCommentCount(UUID postId) {
         postRepository.incrementCommentCount(postId);

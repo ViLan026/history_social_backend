@@ -13,6 +13,7 @@ import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.modules.user.domain.Profile;
 import com.example.history_social_backend.modules.user.domain.User;
+import com.example.history_social_backend.modules.user.dto.response.ProfileResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserResponse;
 import com.example.history_social_backend.modules.user.mapper.UserMapper;
@@ -90,6 +91,18 @@ public class UserQueryService {
                 User::getId,
                 user -> UserReactionResponse.builder()
                         .userId(user.getId())
+                        .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
+                        .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
+                        .build()));
+    }
+    public Map<UUID, ProfileResponse> getUsergetUserFollowInfoMap(Set<UUID> userIds) {
+        List<User> users = userRepository.findAllById(userIds);
+
+        return users.stream().collect(Collectors.toMap(
+                User::getId,
+                user -> ProfileResponse.builder()
+                        .userId(user.getId())
+                        .username(user.getProfile().getUsername() != null ? user.getProfile().getUsername() : "Unknown")
                         .displayName(user.getProfile() != null ? user.getProfile().getDisplayName() : "Unknown")
                         .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
                         .build()));

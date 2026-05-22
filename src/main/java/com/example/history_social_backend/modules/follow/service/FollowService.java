@@ -1,10 +1,13 @@
 package com.example.history_social_backend.modules.follow.service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +20,7 @@ import com.example.history_social_backend.modules.follow.domain.Follow;
 import com.example.history_social_backend.modules.follow.dto.response.FollowResponse;
 import com.example.history_social_backend.modules.follow.repository.FollowRepository;
 import com.example.history_social_backend.modules.user.domain.Profile;
+import com.example.history_social_backend.modules.user.dto.response.ProfileResponse;
 import com.example.history_social_backend.modules.user.service.UserQueryService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,49 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final UserQueryService userQueryService;
+
+    @Transactional(readOnly = true)
+    public List<FollowResponse> getFollowSuggestions(int limit) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        int safeLimit = Math.min(Math.max(limit, 1), 20);
+
+        List<UUID> followingIds = followRepository.findFollowingIdsByFollowerId(currentUserId);
+
+        List<UUID> excludedIds = new ArrayList<>();
+        excludedIds.add(currentUserId);
+        excludedIds.addAll(followingIds);
+
+        if (followingIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> suggestedUserIds = followRepository.findSuggestedUserIdsByMutualFollowing(
+                currentUserId,
+                followingIds,
+                excludedIds,
+                PageRequest.of(0, safeLimit));
+
+        if (suggestedUserIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<UUID, ProfileResponse> userMap = userQueryService
+                .getUsergetUserFollowInfoMap(new HashSet<>(suggestedUserIds));
+
+return suggestedUserIds.stream()
+        .<FollowResponse>map(userId -> {
+            ProfileResponse user = userMap.get(userId);
+
+            return FollowResponse.builder()
+                    .userId(userId)
+                    .username(user != null ? user.getUsername() : null)
+                    .displayName(user != null ? user.getDisplayName() : null)
+                    .avatarUrl(user != null ? user.getAvatarUrl() : null)
+                    .build();
+        })
+        .toList();
+    }
 
     @Transactional
     public void followUser(UUID followingId) {

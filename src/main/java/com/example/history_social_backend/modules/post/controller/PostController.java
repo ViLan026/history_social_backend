@@ -47,8 +47,19 @@ public class PostController {
         return ApiResponse.success(postQueryService.getPostById(id));
     }
 
+    @GetMapping("/home")
+    public ApiResponse<PageResponse<FeedPostResponse>> getPublicHomePosts(
+            @PageableDefault( size = 10, sort = "createdAt")
+            Pageable pageable
+    ) {
+        Page<FeedPostResponse> pageData =
+                postQueryService.getPublicPublishedPosts(pageable);
 
-    // trang chủ hoặc trending 
+        return ApiResponse.success(PageResponse.from(pageData));
+    }
+
+
+    // trang chủ khi người dùng đã đăng nhập 
     @GetMapping
     public ApiResponse<PageResponse<FeedPostResponse>> getPublishedPosts(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {

@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.follow.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -37,18 +38,24 @@ public class FollowController {
     @GetMapping("/{userId}/followers")
     public ApiResponse<PageResponse<FollowResponse>> getFollowers(
             @PathVariable UUID userId,
-            @PageableDefault( size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.success(followService.getFollowers(userId, pageable));
     }
 
     @GetMapping("/{userId}/following")
     public ApiResponse<PageResponse<FollowResponse>> getFollowing(
             @PathVariable UUID userId,
-            @PageableDefault( size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ApiResponse.success(followService.getFollowing(userId, pageable));
+    }
+
+    @GetMapping("/suggestions")
+    public ApiResponse<List<FollowResponse>> getFollowSuggestions(
+            @RequestParam(defaultValue = "10") int limit) {
+        return ApiResponse.<List<FollowResponse>>builder()
+                .success(true)
+                .message("Get follow suggestions successfully")
+                .data(followService.getFollowSuggestions(limit))
+                .build();
     }
 }

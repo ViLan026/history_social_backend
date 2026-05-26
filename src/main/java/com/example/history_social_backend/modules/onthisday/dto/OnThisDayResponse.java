@@ -17,5 +17,5 @@ public class OnThisDayResponse {
     private UUID id;
     private LocalDate eventDate;
     private String description;
-    private String note;
+    private String title;
 }

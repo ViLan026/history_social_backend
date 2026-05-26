@@ -11,9 +11,10 @@ import java.util.UUID;
 
 public final class SecurityUtils {
 
-    private SecurityUtils() {}
+    private SecurityUtils() {
+    }
 
-    //  Lấy trực tiếp object Jwt của Spring Security
+    // Lấy trực tiếp object Jwt của Spring Security
     public static Jwt getJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -32,32 +33,32 @@ public final class SecurityUtils {
     // các hàm lấy dự liệu từu Jwt.claims đã đặt lúc buildToken (file JwtService)
     public static UUID getCurrentUserId() {
         Jwt jwt = getJwt();
-        String idStr = jwt.getClaimAsString("id"); 
-        
+        String idStr = jwt.getClaimAsString("id");
+
         if (idStr == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED); 
+            throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         return UUID.fromString(idStr);
     }
 
     public static String getCurrentUserEmail() {
         // Thuộc tính subject lưu email
-        return getJwt().getSubject(); 
+        return getJwt().getSubject();
     }
 
     public static String getCurrentUserStatus() {
         return getJwt().getClaimAsString("status");
     }
 
-
     public static boolean hasRole(String roleName) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) return false;
-
-        String targetRole = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
-
+        if (authentication == null) {
+            System.out.println("Authorities: null | Checking for role: " + roleName);
+            return false;
+        }
+        System.out.println("Authorities: " + authentication.getAuthorities() + " | Checking for role: " + roleName);
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(authority -> authority.equals(targetRole));
+                .anyMatch(authority -> authority.equals(roleName));
     }
 }

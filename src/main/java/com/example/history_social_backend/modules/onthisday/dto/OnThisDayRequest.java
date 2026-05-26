@@ -21,5 +21,5 @@ public class OnThisDayRequest {
     @NotBlank(message = "Mô tả sự kiện không được để trống")
     private String description;
 
-    private String note;
+    private String title;
 }

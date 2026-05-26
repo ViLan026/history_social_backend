@@ -2,6 +2,10 @@ package com.example.history_social_backend.modules.dashboard.service;
 
 import com.example.history_social_backend.modules.dashboard.dto.response.*;
 import com.example.history_social_backend.modules.dashboard.repository.DashboardQueryRepository;
+import com.example.history_social_backend.modules.post.domain.PostStatus;
+import com.example.history_social_backend.modules.report.domain.ReportStatus;
+import com.example.history_social_backend.modules.user.domain.AccountStatus;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,31 +24,33 @@ public class AdminDashboardService {
     private final DashboardQueryRepository dashboardQueryRepository;
 
     //  Tổng quan dashboard
-    public DashboardOverviewResponse getOverview() {
-        return DashboardOverviewResponse.builder()
-                // Users
-                .totalUsers(dashboardQueryRepository.countAllUsers())
-                .activeUsers(dashboardQueryRepository.countUsersByStatus("ACTIVE"))
-                .inactiveUsers(dashboardQueryRepository.countUsersByStatus("INACTIVE"))
-                // Posts
-                .totalPosts(dashboardQueryRepository.countAllPosts())
-                .publishedPosts(dashboardQueryRepository.countPostsByStatus("PUBLISHED"))
-                .draftPosts(dashboardQueryRepository.countPostsByStatus("DRAFT"))
-                .hiddenPosts(dashboardQueryRepository.countPostsByStatus("HIDDEN"))
-                .flaggedPosts(dashboardQueryRepository.countPostsByStatus("FLAGGED"))
-                .rejectedPosts(dashboardQueryRepository.countPostsByStatus("REJECTED"))
-                // Reports
-                .pendingReports(dashboardQueryRepository.countReportsByStatus("PENDING"))
-                .resolvedReports(dashboardQueryRepository.countReportsByStatus("RESOLVED"))
-                .dismissedReports(dashboardQueryRepository.countReportsByStatus("DISMISSED"))
-                // Interactions
-                .totalComments(dashboardQueryRepository.countAllComments())
-                .totalReactions(dashboardQueryRepository.countAllReactions())
-                .totalBookmarks(dashboardQueryRepository.countAllBookmarks())
-                .totalFollows(dashboardQueryRepository.countAllFollows())
-                .build();
-    }
+public DashboardOverviewResponse getOverview() {
+    return DashboardOverviewResponse.builder()
+            // Users
+            .totalUsers(dashboardQueryRepository.countAllUsers())
+            .activeUsers(dashboardQueryRepository.countUsersByStatus(AccountStatus.ACTIVE))
+            .inactiveUsers(dashboardQueryRepository.countUsersByStatus(AccountStatus.INACTIVE))
 
+            // Posts
+            .totalPosts(dashboardQueryRepository.countAllPosts())
+            .publishedPosts(dashboardQueryRepository.countPostsByStatus(PostStatus.PUBLISHED))
+            .draftPosts(dashboardQueryRepository.countPostsByStatus(PostStatus.DRAFT))
+            .hiddenPosts(dashboardQueryRepository.countPostsByStatus(PostStatus.HIDDEN))
+            .flaggedPosts(dashboardQueryRepository.countPostsByStatus(PostStatus.FLAGGED))
+            .rejectedPosts(dashboardQueryRepository.countPostsByStatus(PostStatus.REJECTED))
+
+            // Reports
+            .pendingReports(dashboardQueryRepository.countReportsByStatus(ReportStatus.PENDING))
+            .resolvedReports(dashboardQueryRepository.countReportsByStatus(ReportStatus.RESOLVED))
+            .dismissedReports(dashboardQueryRepository.countReportsByStatus(ReportStatus.DISMISSED))
+
+            // Interactions
+            .totalComments(dashboardQueryRepository.countAllComments())
+            .totalReactions(dashboardQueryRepository.countAllReactions())
+            .totalBookmarks(dashboardQueryRepository.countAllBookmarks())
+            .totalFollows(dashboardQueryRepository.countAllFollows())
+            .build();
+}
     // Thống kê bài viết theo trạng thái
     public List<CountByStatusResponse> getPostStatusStats() {
         List<Object[]> rows = dashboardQueryRepository.countPostsGroupByStatus();

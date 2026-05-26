@@ -48,6 +48,9 @@ public final class ApiPaths {
 
     // Admin
     public static final String ADMIN = API_V1 + "/admin";
+    public static final String ADMIN_DASHBOARD = ADMIN + "/dashboard";
     public static final String ADMIN_USERS = ADMIN + "/users";
+    public static final String ADMIN_POSTS = ADMIN + "/posts";
+    public static final String ADMIN_IN_THIS_DAY = ADMIN + "/onthisday";
     public static final String ADMIN_REPORTS = ADMIN + "/reports";
 }

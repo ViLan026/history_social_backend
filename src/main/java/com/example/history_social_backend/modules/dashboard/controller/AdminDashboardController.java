@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.dashboard.controller;
 
+import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.modules.dashboard.dto.response.*;
 import com.example.history_social_backend.modules.dashboard.service.AdminDashboardService;
@@ -12,9 +13,9 @@ import java.util.List;
 
 // Tất cả API chỉ dành cho ADMIN, chỉ đọc thống kê, không thao tác ghi.
 @RestController
-@RequestMapping("/admin/dashboard")
+@RequestMapping(ApiPaths.ADMIN_DASHBOARD)
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService;

@@ -6,6 +6,7 @@ import com.example.history_social_backend.modules.user.domain.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,4 +24,6 @@ public class UserSummaryResponse {
     String avatarUrl;
     AccountStatus status;
     Set<Role> roles;
+    String username;
+    LocalDateTime createdAt;
 }

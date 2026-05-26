@@ -36,6 +36,7 @@ public class SecurityConfig {
             ApiPaths.AUTH + "/**",
             ApiPaths.ONTHISDAY + "/**",
             ApiPaths.SEARCH + "/**",
+            ApiPaths.POSTS + "/**",
 
             "/swagger-ui/**",
             "/swagger-ui.html",
@@ -62,6 +63,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, ApiPaths.USERS + "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApiPaths.COMMENTS + "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApiPaths.FOLLOWS + "/**").permitAll()
+                .requestMatchers(ApiPaths.ADMIN + "/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated());
         // server nhận JWT từ client. Ví dụ request: Authorization: Bearer dgdd....
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
@@ -101,7 +103,7 @@ public class SecurityConfig {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         // mặc định có SCOPE_ ở đầu, giờ đổi thành ""
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
-
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
 

@@ -73,15 +73,15 @@ public class Post extends BaseEntity {
     @Builder.Default
     Long reactionCount = 0L;
 
-    @Column(name = "bookmark_count ", nullable = false)
+    @Column(name = "bookmark_count", nullable = false)
     @Builder.Default
     Long bookmarkCount  = 0L;
 
-    @Column(name = "report_count ", nullable = false)
+    @Column(name = "report_count", nullable = false)
     @Builder.Default
     Long reportCount  = 0L;
 
-    @Column(name = "quality_score  ", nullable = false)
+    @Column(name = "quality_score", nullable = false)
     @Builder.Default
     double qualityScore   = 0.5;
 

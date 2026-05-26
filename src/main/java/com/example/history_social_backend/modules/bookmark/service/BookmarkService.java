@@ -9,7 +9,9 @@ import com.example.history_social_backend.modules.bookmark.dto.response.Bookmark
 import com.example.history_social_backend.modules.bookmark.dto.response.BookmarkToggleResponse;
 import com.example.history_social_backend.modules.bookmark.mapper.BookmarkMapper;
 import com.example.history_social_backend.modules.bookmark.repository.BookmarkRepository;
+import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
+
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +31,15 @@ import java.util.UUID;
 public class BookmarkService {
 
     BookmarkRepository bookmarkRepository;
-    PostQueryService postQueryService;
     BookmarkMapper bookmarkMapper;
+    PostQueryService postQueryService;
 
     @Transactional
     public BookmarkToggleResponse toggleBookmark(UUID postId) {
 
         UUID userId = SecurityUtils.getCurrentUserId();
 
-        //  check tồn tại
+        // check tồn tại
         if (!postQueryService.existsById(postId)) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
@@ -72,11 +74,22 @@ public class BookmarkService {
     public PageResponse<BookmarkResponse> getBookmarkedPosts(int page, int size) {
         UUID userId = SecurityUtils.getCurrentUserId();
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending());
 
         Page<Bookmark> bookmarkPage = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        Page<BookmarkResponse> responsePage = bookmarkPage.map(bookmarkMapper::toResponse);
+        Page<BookmarkResponse> responsePage = bookmarkPage.map(bookmark -> {
+            BookmarkResponse response = bookmarkMapper.toResponse(bookmark);
+
+            FeedPostResponse postResponse = postQueryService.getPostById(bookmark.getPostId());
+
+            response.setPost(postResponse);
+
+            return response;
+        });
 
         return PageResponse.from(responsePage);
     }

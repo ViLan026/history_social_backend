@@ -34,7 +34,6 @@ public class SecurityConfig {
     // danh sách các endpoint công khai, không cần login
     private final String[] PUBLIC_ENDPOINTS = {
             ApiPaths.AUTH + "/**",
-            ApiPaths.FOLLOWS + "/",
             ApiPaths.ONTHISDAY + "/**",
             ApiPaths.SEARCH + "/**",
 
@@ -58,12 +57,11 @@ public class SecurityConfig {
         httpSecurity.cors(Customizer.withDefaults());
 
         httpSecurity.authorizeHttpRequests(request -> request
-                // .requestMatchers(org.springframework.http.HttpMethod.OPTIONS,
-                // "/**").permitAll()
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, ApiPaths.POSTS + "/home").permitAll()
+                .requestMatchers(HttpMethod.GET, ApiPaths.POSTS + "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApiPaths.USERS + "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApiPaths.COMMENTS + "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, ApiPaths.FOLLOWS + "/**").permitAll()
                 .anyRequest().authenticated());
         // server nhận JWT từ client. Ví dụ request: Authorization: Bearer dgdd....
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2

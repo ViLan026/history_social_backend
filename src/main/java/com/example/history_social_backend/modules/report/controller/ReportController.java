@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.report.dto.request.CreateReportRequest;
@@ -20,7 +21,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/reports")
+@RequestMapping(ApiPaths.REPORTS)
 @RequiredArgsConstructor
 public class ReportController {
 

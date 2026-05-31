@@ -54,4 +54,15 @@ public interface FollowRepository
             @Param("followingIds") List<UUID> followingIds,
             @Param("excludedIds") List<UUID> excludedIds,
             Pageable pageable);
+
+    @Query("""
+                SELECT f.followingId
+                FROM Follow f
+                WHERE f.followingId <> :currentUserId
+                GROUP BY f.followingId
+                ORDER BY COUNT(f.followerId) DESC
+            """)
+    List<UUID> findPopularUserIds(
+            @Param("currentUserId") UUID currentUserId,
+            Pageable pageable);
 }

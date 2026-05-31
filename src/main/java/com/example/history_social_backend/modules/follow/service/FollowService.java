@@ -40,19 +40,23 @@ public class FollowService {
 
         List<UUID> followingIds = followRepository.findFollowingIdsByFollowerId(currentUserId);
 
-        List<UUID> excludedIds = new ArrayList<>();
-        excludedIds.add(currentUserId);
-        excludedIds.addAll(followingIds);
+        List<UUID> suggestedUserIds;
 
         if (followingIds.isEmpty()) {
-            return List.of();
-        }
+            suggestedUserIds = followRepository.findPopularUserIds(
+                    currentUserId,
+                    PageRequest.of(0, safeLimit));
+        } else {
+            List<UUID> excludedIds = new ArrayList<>();
+            excludedIds.add(currentUserId);
+            excludedIds.addAll(followingIds);
 
-        List<UUID> suggestedUserIds = followRepository.findSuggestedUserIdsByMutualFollowing(
-                currentUserId,
-                followingIds,
-                excludedIds,
-                PageRequest.of(0, safeLimit));
+            suggestedUserIds = followRepository.findSuggestedUserIdsByMutualFollowing(
+                    currentUserId,
+                    followingIds,
+                    excludedIds,
+                    PageRequest.of(0, safeLimit));
+        }
 
         if (suggestedUserIds.isEmpty()) {
             return List.of();
@@ -61,18 +65,18 @@ public class FollowService {
         Map<UUID, ProfileResponse> userMap = userQueryService
                 .getUsergetUserFollowInfoMap(new HashSet<>(suggestedUserIds));
 
-return suggestedUserIds.stream()
-        .<FollowResponse>map(userId -> {
-            ProfileResponse user = userMap.get(userId);
+        return suggestedUserIds.stream()
+                .map(userId -> {
+                    ProfileResponse user = userMap.get(userId);
 
-            return FollowResponse.builder()
-                    .userId(userId)
-                    .username(user != null ? user.getUsername() : null)
-                    .displayName(user != null ? user.getDisplayName() : null)
-                    .avatarUrl(user != null ? user.getAvatarUrl() : null)
-                    .build();
-        })
-        .toList();
+                    return FollowResponse.builder()
+                            .userId(userId)
+                            .username(user != null ? user.getUsername() : null)
+                            .displayName(user != null ? user.getDisplayName() : null)
+                            .avatarUrl(user != null ? user.getAvatarUrl() : null)
+                            .build();
+                })
+                .toList();
     }
 
     @Transactional

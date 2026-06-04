@@ -10,7 +10,7 @@ import lombok.*;
 public class CommentCreatedEvent {
     private UUID postId;
     private UUID commentId;
-    private UUID senderId;
-    private UUID receiverId;
+    private UUID actorId;
+    private UUID recipientId;
     private String senderName;
 }

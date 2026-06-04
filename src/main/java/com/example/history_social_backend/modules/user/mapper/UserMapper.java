@@ -15,6 +15,7 @@ public interface UserMapper {
     UserResponse toResponse(User user);
 
     @Mapping(target = "displayName", source = "profile.displayName")
+    @Mapping(target = "username", source = "profile.username")
     @Mapping(target = "avatarUrl", source = "profile.avatarUrl")
     UserSummaryResponse toSummaryResponse(User user);
 
@@ -25,6 +26,8 @@ public interface UserMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "followingCount", ignore = true)
+    @Mapping(target = "followerCount", ignore = true)
     @Mapping(target = "user.email", source = "email")
     void updateProfileFromRequest(@MappingTarget Profile profile,
             UserUpdateRequest request);

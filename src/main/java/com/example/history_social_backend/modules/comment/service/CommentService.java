@@ -65,8 +65,8 @@ public class CommentService {
                 CommentCreatedEvent.builder()
                         .postId(postId)
                         .commentId(savedComment.getId())
-                        .senderId(authorId)
-                        .receiverId(actorProfile.getUserId())
+                        .actorId(authorId)
+                        .recipientId(actorProfile.getUserId())
                         .senderName(actorProfile.getDisplayName())
                         .build());
 

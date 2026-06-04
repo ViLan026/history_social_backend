@@ -21,8 +21,8 @@ public class NotificationEventListener {
     @EventListener
     public void handleCommentCreated(CommentCreatedEvent event) {
         notificationService.createNotification(
-                event.getReceiverId(),
-                event.getSenderId(),
+                event.getRecipientId(),
+                event.getActorId(),
                 NotificationType.COMMENT,
                 "Bình luận mới",
                 event.getSenderName() + " đã bình luận về bài viết của bạn",
@@ -34,8 +34,8 @@ public class NotificationEventListener {
     @EventListener
     public void handleReactionCreated(ReactionCreatedEvent event) {
         notificationService.createNotification(
-                event.getReceiverId(),
-                event.getSenderId(),
+                event.getRecipientId(),
+                event.getActorId(), 
                 NotificationType.REACTION,
                 "Tương tác mới",
                 event.getSenderName() + " đã bày tỏ cảm xúc về bài viết của bạn",
@@ -47,7 +47,7 @@ public class NotificationEventListener {
     @EventListener
     public void handlePostStatusChanged(PostStatusChangedEvent event) {
         notificationService.createNotification(
-                event.getReceiverId(),
+                event.getRecipientId(),
                 null,
                 NotificationType.POST,
                 "Trạng thái bài viết đã thay đổi",

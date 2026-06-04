@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateNotificationRequest {
-    UUID receiverId;
+    UUID recipientId;
     UUID actorId;
     NotificationType type;
     String title;

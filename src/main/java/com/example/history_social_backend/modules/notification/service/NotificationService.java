@@ -30,23 +30,23 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse createNotification(CreateNotificationRequest request) {
-        if (request.getReceiverId() == null) {
+        if (request.getRecipientId() == null) {
             return null;
         }
 
-        if (request.getActorId() != null && request.getActorId().equals(request.getReceiverId())) {
+        if (request.getActorId() != null && request.getActorId().equals(request.getRecipientId())) {
             return null;
         }
 
         Notification notification = Notification.builder()
-                .receiverId(request.getReceiverId())
+                .recipientId(request.getRecipientId())
                 .actorId(request.getActorId())
                 .type(request.getType())
-                .title(request.getTitle())
-                .message(request.getMessage())
-                .targetId(request.getTargetId())
-                .targetType(request.getTargetType())
-                .read(false)
+                // .title(request.getTitle())
+                .content(request.getMessage())
+                .referenceId(request.getTargetId())
+                // .targetType(request.getTargetType())
+                .isRead(false)
                 .build();
 
         return notificationMapper.toResponse(notificationRepository.save(notification));
@@ -54,16 +54,15 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse createNotification(
-            UUID receiverId,
+            UUID recipientId,
             UUID actorId,
             NotificationType type,
             String title,
             String message,
             UUID targetId,
-            String targetType
-    ) {
+            String targetType) {
         return createNotification(CreateNotificationRequest.builder()
-                .receiverId(receiverId)
+                .recipientId(recipientId)
                 .actorId(actorId)
                 .type(type)
                 .title(title)
@@ -80,11 +79,10 @@ public class NotificationService {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+                Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Page<NotificationResponse> responsePage = notificationRepository
-                .findByReceiverIdOrderByCreatedAtDesc(currentUserId, pageable)
+                .findByRecipientIdOrderByCreatedAtDesc(currentUserId, pageable)
                 .map(notificationMapper::toResponse);
 
         return PageResponse.<NotificationResponse>builder()
@@ -99,7 +97,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public long countUnreadNotifications() {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
-        return notificationRepository.countByReceiverIdAndReadFalse(currentUserId);
+        return notificationRepository.countByRecipientIdAndIsReadFalse(currentUserId);
     }
 
     @Transactional
@@ -109,11 +107,12 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow();
 
-        if (!notification.getReceiverId().equals(currentUserId)) {
+        if (!notification.getRecipientId().equals(currentUserId)) {
             return;
         }
+        notification.markAsRead();
 
-        notification.setRead(true);
+        // notification.setIsRead(true);
         notificationRepository.save(notification);
     }
 }

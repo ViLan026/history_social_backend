@@ -54,6 +54,8 @@ public class PostQueryService {
         return response;
     }
 
+    
+
     @Transactional(readOnly = true)
     public Page<FeedPostResponse> getPublishedPosts(Pageable pageable) {
 

@@ -84,7 +84,7 @@ public class PostService {
         eventPublisher.publishEvent(
                 PostStatusChangedEvent.builder()
                         .postId(savedPost.getId())
-                        .receiverId(savedPost.getAuthorId())
+                        .recipientId(savedPost.getAuthorId())
                         .status(savedPost.getStatus().name())
                         .reason("Bài viết đã được hệ thống cập nhật trạng thái")
                         .build());

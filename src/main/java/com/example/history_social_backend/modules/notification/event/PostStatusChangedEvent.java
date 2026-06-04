@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 public class PostStatusChangedEvent {
     private UUID postId;
-    private UUID receiverId;
+    private UUID recipientId;
     private String status;
     private String reason;
 }

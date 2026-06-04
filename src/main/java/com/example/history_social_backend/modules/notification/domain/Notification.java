@@ -1,8 +1,11 @@
 package com.example.history_social_backend.modules.notification.domain;
 
 import com.example.history_social_backend.common.domain.BaseEntity;
+import com.example.history_social_backend.common.utils.UuidV7;
+
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder.Default;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
@@ -11,38 +14,38 @@ import java.util.UUID;
 @Table(name = "notifications")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class Notification extends BaseEntity {
 
     @Id
-    @GeneratedValue
+    @UuidV7
+    @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     UUID id;
-
-    @Column(name = "receiver_id", nullable = false)
-    UUID receiverId;
+    
+    @Column(name = "recipient_id", nullable = false)
+    UUID recipientId;
 
     @Column(name = "actor_id")
     UUID actorId;
 
+    @Column(name = "reference_id")
+    UUID referenceId;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     NotificationType type;
 
-    @Column(nullable = false)
-    String title;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    String message;
-
-    @Column(name = "target_id")
-    UUID targetId;
-
-    @Column(name = "target_type", length = 50)
-    String targetType;
+    @Column(columnDefinition = "TEXT")
+    String content;
 
     @Column(name = "is_read", nullable = false)
-    boolean read;
+    @Builder.Default
+    boolean isRead = false;
+
+    public void markAsRead() {
+        this.isRead = true;
+    }
 }

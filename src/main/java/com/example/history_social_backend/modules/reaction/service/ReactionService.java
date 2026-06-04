@@ -2,6 +2,7 @@ package com.example.history_social_backend.modules.reaction.service;
 
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
+import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
 import com.example.history_social_backend.modules.reaction.domain.ReactionType;
@@ -45,6 +46,7 @@ public class ReactionService {
     @Transactional
     public ReactionType toggleReaction(ReactionRequest request) {
         UUID postId = request.getPostId();
+
         UUID authorId = SecurityUtils.getCurrentUserId();
 
         ReactionType newType = request.getType();
@@ -63,15 +65,16 @@ public class ReactionService {
 
             reactionRepository.save(newReaction);
             postQueryService.increaseReactionCount(postId);
+            FeedPostResponse post = postQueryService.getPostById(postId);
 
             eventPublisher.publishEvent(
                     ReactionCreatedEvent.builder()
                             .postId(postId)
                             .reactionId(newReaction.getId())
-                            .senderId(authorId)
-                            // .receiverId(post.getAuthorId())
-                            // .actorName(actorProfile.getDisplayName())
-                            // .reactionType(savedReaction.getType())
+                            .actorId(authorId)
+                            .recipientId(post.getAuthor().getUserId())
+                            .senderName(post.getAuthor().getDisplayName())
+                            .reactionType(newReaction.getType().name())
                             .build());
 
             return newReaction.getType();

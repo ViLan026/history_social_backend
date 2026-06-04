@@ -9,7 +9,8 @@ import lombok.*;
 public class ReactionCreatedEvent {
     private UUID postId;
     private UUID reactionId;
-    private UUID senderId;
-    private UUID receiverId;
+    private UUID actorId;
+    private UUID recipientId;
     private String senderName;
+    private String reactionType;
 }

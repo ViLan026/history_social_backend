@@ -1,8 +1,11 @@
 package com.example.history_social_backend.modules.notification.domain;
 
 public enum NotificationType {
-    REACTION,
+    LIKE,
     COMMENT,
-    // FOLLOW,
-    POST
+    REACTION,
+    FOLLOW,
+    SYSTEM,
+    POST,
+    REPORT
 }

@@ -1,7 +1,5 @@
 package com.example.history_social_backend.modules.post.service;
 
-import com.example.history_social_backend.common.messaging.model.EventType;
-import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
@@ -12,9 +10,6 @@ import com.example.history_social_backend.modules.post.dto.request.PostCreationR
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
-import com.example.history_social_backend.modules.post.message.PostCreatedMessage;
-import com.example.history_social_backend.modules.post.message.PostDeletedMessage;
-import com.example.history_social_backend.modules.post.message.PostUpdatedMessage;
 import com.example.history_social_backend.modules.post.repository.PostMediaRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import com.example.history_social_backend.modules.notification.event.PostStatusChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 @RequiredArgsConstructor
@@ -49,8 +46,8 @@ public class PostService {
     private final PostMediaRepository postMediaRepository;
     private final CloudinaryService cloudinaryService;
     private final PostMapper postMapper;
-    private final RedisEventProducer eventProducer;
     private final PostTagService tagService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
     private final ExecutorService uploadExecutor = Executors.newFixedThreadPool(10);
@@ -59,7 +56,7 @@ public class PostService {
     @Lazy
     private PostService self;
 
-    //  CREATE 
+    // CREATE
     // flow: Upload file → Validate → Resolve Tag → Create Post → Attach relations →
     // Save → Publish event
 
@@ -84,17 +81,13 @@ public class PostService {
             throw e;
         }
 
-        // // 3. Publish event
-        // eventPublisher.publishEvent(new PostCreatedEvent(
-        // this, savedPost.getId(), authorId, savedPost.getTitle()));
-
-        PostCreatedMessage message = PostCreatedMessage.builder()
-                .postId(savedPost.getId())
-                .authorId(savedPost.getAuthorId())
-                .title(savedPost.getTitle())
-                .build();
-
-        eventProducer.publishAfterCommit(EventType.POST_CREATED, message, "PostService");
+        eventPublisher.publishEvent(
+                PostStatusChangedEvent.builder()
+                        .postId(savedPost.getId())
+                        .receiverId(savedPost.getAuthorId())
+                        .status(savedPost.getStatus().name())
+                        .reason("Bài viết đã được hệ thống cập nhật trạng thái")
+                        .build());
 
         return postMapper.toPostResponse(savedPost);
     }
@@ -152,7 +145,7 @@ public class PostService {
         return savedPost;
     }
 
-    //  UPDATE 
+    // UPDATE
     // Flow: Upload → Transaction DB → After commit → delete file cũ → If fail →
     // rollback file mới
     public PostResponse updatePost(UUID postId, PostUpdateRequest request, List<MultipartFile> newFiles) {
@@ -195,13 +188,6 @@ public class PostService {
 
         // eventPublisher.publishEvent(new PostUpdatedEvent(
         // this, updated.getId(), currentUserId, "Post content updated"));
-
-        PostUpdatedMessage message = PostUpdatedMessage.builder()
-                .postId(postId)
-                .updatedBy(currentUserId)
-                .changeDescription("Content updated")
-                .build();
-        eventProducer.publishAfterCommit(EventType.POST_UPDATED, message, "PostService");
 
         return postMapper.toPostResponse(updated);
     }
@@ -281,7 +267,7 @@ public class PostService {
 
     }
 
-    //  DELETE 
+    // DELETE
 
     @Transactional
     public void deletePost(UUID postId, UUID currentUserId) {
@@ -315,17 +301,10 @@ public class PostService {
 
         // eventPublisher.publishEvent(new PostDeletedEvent(this, postId,
         // currentUserId));
-
-        PostDeletedMessage message = PostDeletedMessage.builder()
-                .postId(postId)
-                .deletedBy(currentUserId)
-                .build();
-        eventProducer.publishAfterCommit(EventType.POST_DELETED, message, "PostService");
-
         log.info("Post deleted: postId={}, by={}", postId, currentUserId);
     }
 
-    //  PRIVATE HELPERS 
+    // PRIVATE HELPERS
 
     private List<UploadResult> uploadFilesConcurrentlyWithRollback(List<MultipartFile> files, String folderName) {
         if (CollectionUtils.isEmpty(files)) {
@@ -410,7 +389,5 @@ public class PostService {
     private String getPostFolderForUser(UUID userId) {
         return "history_social/" + "posts/" + userId.toString();
     }
-
-
 
 }

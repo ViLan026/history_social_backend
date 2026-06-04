@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,23 +40,22 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(
+    public ApiResponse<AuthenticationResponse> login(
             @RequestBody @Valid AuthenticationRequest request,
             HttpServletResponse response) {
         TokenPair tokens = authService.login(request);
 
         addAuthCookies(response, tokens.getAccessToken(), tokens.getRefreshToken());
 
-        return ResponseEntity.ok(
-                ApiResponse.<AuthenticationResponse>builder()
-                        .success(true)
-                        .code(HttpStatus.OK.value())
-                        .message("Login successful")
-                        .data(AuthenticationResponse.builder()
-                                .authenticated(true)
-                                .build())
-                        .timestamp(LocalDateTime.now())
-                        .build());
+        return ApiResponse.<AuthenticationResponse>builder()
+                .success(true)
+                .code(HttpStatus.OK.value())
+                .message("Login successful")
+                .data(AuthenticationResponse.builder()
+                        .authenticated(true)
+                        .build())
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 
     // Backend yêu cầu browser lưu cookie thông qua header Set-Cookie
@@ -70,7 +68,7 @@ public class AuthController {
                 .path("/")
                 .sameSite("Lax")
                 // .sameSite("None")
-                .maxAge(Duration.ofMinutes(2))
+                .maxAge(Duration.ofMinutes(60))
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token",
@@ -81,7 +79,7 @@ public class AuthController {
                 .path("/")
                 .sameSite("Lax")
                 // .sameSite("None")
-                .maxAge(Duration.ofDays(7))
+                .maxAge(Duration.ofDays(15))
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -89,19 +87,18 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
+    public ApiResponse<Void> logout(
             @CookieValue(value = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response) {
         authService.logout(refreshToken);
         clearAuthCookies(response);
 
-        return ResponseEntity.ok(
-                ApiResponse.<Void>builder()
-                        .success(true)
-                        .code(HttpStatus.OK.value())
-                        .message("Logout successful")
-                        .timestamp(LocalDateTime.now())
-                        .build());
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .code(HttpStatus.OK.value())
+                .message("Logout successful")
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 
     private void clearAuthCookies(HttpServletResponse response) {
@@ -152,26 +149,22 @@ public class AuthController {
     // }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> refresh(
+    public ApiResponse<AuthenticationResponse> refresh(
             @CookieValue(value = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response) {
         TokenPair tokens = authService.refresh(refreshToken);
 
-        addAuthCookies(
-                response,
-                tokens.getAccessToken(),
-                tokens.getRefreshToken());
+        addAuthCookies(response, tokens.getAccessToken(), tokens.getRefreshToken());
 
-        return ResponseEntity.ok(
-                ApiResponse.<AuthenticationResponse>builder()
-                        .success(true)
-                        .code(HttpStatus.OK.value())
-                        .message("Token refreshed")
-                        .data(
-                                AuthenticationResponse.builder()
-                                        .authenticated(true)
-                                        .build())
-                        .timestamp(LocalDateTime.now())
-                        .build());
+        return ApiResponse.<AuthenticationResponse>builder()
+                .success(true)
+                .code(HttpStatus.OK.value())
+                .message("Token refreshed")
+                .data(
+                        AuthenticationResponse.builder()
+                                .authenticated(true)
+                                .build())
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 }

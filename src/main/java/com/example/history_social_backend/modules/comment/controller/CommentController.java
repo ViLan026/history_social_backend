@@ -20,7 +20,7 @@ public class CommentController {
 
     @PostMapping
     public ApiResponse<CommentResponse> createComment(@RequestBody CommentRequest request) {
-        return commentService.createComment(request);
+        return ApiResponse.success(commentService.createComment(request));
     }
 
     @GetMapping("/posts/{postId}")

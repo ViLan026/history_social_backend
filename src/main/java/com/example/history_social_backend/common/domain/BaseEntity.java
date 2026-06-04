@@ -24,5 +24,3 @@ public abstract class BaseEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 }
-
-// tạo lớp chứa thuộc tính có ở nhiều entity như createdAt,...

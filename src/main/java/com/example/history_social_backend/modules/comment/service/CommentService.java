@@ -1,8 +1,5 @@
 package com.example.history_social_backend.modules.comment.service;
 
-import com.example.history_social_backend.common.messaging.model.EventType;
-import com.example.history_social_backend.common.messaging.producer.RedisEventProducer;
-import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
@@ -11,7 +8,6 @@ import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
-import com.example.history_social_backend.modules.comment.message.CommentCreatedMessage;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
@@ -28,6 +24,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
+import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 
 import java.util.UUID;
 
@@ -39,13 +38,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserQueryService userQueryService;
     private final CommentMapper commentMapper;
-    private final RedisEventProducer eventProducer;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @PersistenceContext
     private final EntityManager entityManager;
 
     @Transactional
-    public ApiResponse<CommentResponse> createComment(CommentRequest request) {
+    public CommentResponse createComment(CommentRequest request) {
 
         UUID authorId = SecurityUtils.getCurrentUserId();
         UUID postId = request.getPostId();
@@ -60,22 +59,19 @@ public class CommentService {
         comment.validateContent();
 
         Comment savedComment = commentRepository.save(comment);
+        UserReactionResponse actorProfile = userQueryService.getUserInfo(authorId);
 
-        // Publish event sau khi lưu thành công
-        // eventPublisher.publishEvent(new CommentCreatedEvent(
-        // savedComment.getId(),
-        // request.getPostId(),
-        // authorId));
-
-        CommentCreatedMessage message = CommentCreatedMessage.builder()
-                .commentId(savedComment.getId())
-                .postId(savedComment.getPostId())
-                .authorId(authorId)
-                .build();
-        eventProducer.publishAfterCommit(EventType.COMMENT_CREATED, message, "CommentService");
+        applicationEventPublisher.publishEvent(
+                CommentCreatedEvent.builder()
+                        .postId(postId)
+                        .commentId(savedComment.getId())
+                        .senderId(authorId)
+                        .receiverId(actorProfile.getUserId())
+                        .senderName(actorProfile.getDisplayName())
+                        .build());
 
         CommentResponse response = commentMapper.toResponse(savedComment);
-        return ApiResponse.success("Comment created successfully", response);
+        return response;
     }
 
     @Transactional(readOnly = true)

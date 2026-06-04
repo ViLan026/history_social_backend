@@ -84,7 +84,7 @@ CREATE TABLE refresh_token (
 
 
 CREATE TABLE posts (
-	quality_score float8 NOT NULL,
+	-- quality_score float8 NOT NULL,
 	bookmark_count int8 NOT NULL,
 	comment_count int8 NOT NULL,
 	created_at timestamp(6) NOT NULL,

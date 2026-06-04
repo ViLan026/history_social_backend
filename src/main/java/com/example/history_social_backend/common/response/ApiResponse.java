@@ -16,7 +16,7 @@ import com.example.history_social_backend.core.exception.ErrorCode;
 public class ApiResponse<T> {
 
     boolean success;
-    int code;              // business code
+    int code; // business code
     String message;
     List<String> errors;
     T data;
@@ -55,12 +55,12 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    //  SUCCESS không data và không message (mặc định)
+    // SUCCESS không data và không message (mặc định)
     public static ApiResponse<Void> success() {
         return success("Success");
     }
 
-    // ================= ERROR =================
+    // ERROR
 
     public static <T> ApiResponse<T> error(ErrorCode errorCode) {
         return ApiResponse.<T>builder()

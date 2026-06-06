@@ -45,15 +45,14 @@ public class ReportService {
     public ReportResponse createReport(CreateReportRequest request) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
-        // check xem bài viết hoặc comment bị báo cáo có tồn tại không 
+        // check xem bài viết hoặc comment bị báo cáo có tồn tại không
         validateTargetExists(request.getTargetType(), request.getTargetId());
 
         // Check duplicate report
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
-            currentUserId,
-            request.getTargetType(),
-            request.getTargetId()
-        )) {
+                currentUserId,
+                request.getTargetType(),
+                request.getTargetId())) {
             throw new AppException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
@@ -67,8 +66,8 @@ public class ReportService {
         report.setStatus(ReportStatus.PENDING);
 
         Report savedReport = reportRepository.save(report);
-        log.info("User {} created report {} for {} {}", 
-            currentUserId, savedReport.getId(), request.getTargetType(), request.getTargetId());
+        log.info("User {} created report {} for {} {}",
+                currentUserId, savedReport.getId(), request.getTargetType(), request.getTargetId());
 
         return reportMapper.toReportResponse(savedReport);
     }
@@ -78,25 +77,38 @@ public class ReportService {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        
+
         // Lấy các báo cáo do user tạo ra
         Page<Report> myCreatedReports = reportRepository.findByReporterId(currentUserId, pageable);
-        
+
         // Lấy các báo cáo về nội dung của user
-        // Page<Report> reportsOnMyContent = reportRepository.findByTargetId(currentUserId, pageable);
+        // Page<Report> reportsOnMyContent =
+        // reportRepository.findByTargetId(currentUserId, pageable);
 
         // Combine và xử lý
-        Page<MyReportResponse> responsePage = myCreatedReports.map(report -> 
-            buildMyReportResponse(report, currentUserId)
-        );
+        Page<MyReportResponse> responsePage = myCreatedReports
+                .map(report -> buildMyReportResponse(report, currentUserId));
 
         return PageResponse.from(responsePage);
     }
 
-    @Transactional(readOnly = true)          
-    public PageResponse<ModerationReportResponse> getPendingReports(int page, int size) {
+    @Transactional(readOnly = true)
+    public PageResponse<ModerationReportResponse> getPendingReports(
+            int page,
+            int size,
+            ReportTargetType targetType) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-        Page<Report> reports = reportRepository.findByStatus(ReportStatus.PENDING, pageable);
+
+        Page<Report> reports;
+
+        if (targetType == null) {
+            reports = reportRepository.findByStatus(ReportStatus.PENDING, pageable);
+        } else {
+            reports = reportRepository.findByStatusAndTargetType(
+                    ReportStatus.PENDING,
+                    targetType,
+                    pageable);
+        }
 
         Page<ModerationReportResponse> responsePage = reports.map(this::buildModerationResponse);
 
@@ -108,11 +120,11 @@ public class ReportService {
         UUID adminUserId = SecurityUtils.getCurrentUserId();
 
         Report report = reportRepository.findById(reportId)
-            .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
 
         // Validate status transition
         if (report.getStatus() != ReportStatus.PENDING) {
-            throw new AppException(ErrorCode.REPORT_ALREADY_EXISTS); // Reuse error or create REPORT_ALREADY_REVIEWED
+            throw new AppException(ErrorCode.REPORT_ALREADY_EXISTS); 
         }
 
         report.setStatus(request.getStatus());
@@ -120,8 +132,8 @@ public class ReportService {
         report.setReviewedAt(LocalDateTime.now());
 
         Report updatedReport = reportRepository.save(report);
-        log.info("Admin {} reviewed report {} with status {}", 
-            adminUserId, reportId, request.getStatus());
+        log.info("Admin {} reviewed report {} with status {}",
+                adminUserId, reportId, request.getStatus());
 
         return reportMapper.toReportResponse(updatedReport);
     }
@@ -151,9 +163,9 @@ public class ReportService {
         TargetPreviewResponse targetPreview = buildTargetPreview(report.getTargetType(), report.getTargetId());
 
         return ModerationReportResponse.builder()
-            .report(reportResponse)
-            .targetPreview(targetPreview)
-            .build();
+                .report(reportResponse)
+                .targetPreview(targetPreview)
+                .build();
     }
 
     private TargetPreviewResponse buildTargetPreview(ReportTargetType targetType, UUID targetId) {
@@ -166,9 +178,9 @@ public class ReportService {
             }
             default -> {
                 return TargetPreviewResponse.builder()
-                    .id(targetId)
-                    .content("Unknown target type")
-                    .build();
+                        .id(targetId)
+                        .content("Unknown target type")
+                        .build();
             }
         }
     }
@@ -184,14 +196,14 @@ public class ReportService {
             switch (report.getTargetType()) {
                 case POST -> {
                     var postPreview = postQueryService.getPostPreviewForModeration(report.getTargetId());
-                    
+
                     if (postPreview == null) {
                         targetExists = false;
                         targetStatus = "DELETED";
                     } else {
                         targetExists = true;
                         isMyContentReported = postPreview.getAuthorId().equals(currentUserId);
-                        
+
                         if (Boolean.TRUE.equals(postPreview.getIsHiddenByAdmin())) {
                             targetStatus = "HIDDEN_BY_ADMIN";
                         } else if (Boolean.TRUE.equals(postPreview.getIsHiddenByAuthor())) {
@@ -200,7 +212,7 @@ public class ReportService {
                             targetStatus = "DELETED";
                             targetExists = false;
                         }
-                        
+
                         // Người báo cáo chỉ xem được preview nếu bài viết vẫn active
                         // Chủ bài viết luôn xem được lý do báo cáo
                         if (isMyContentReported || "ACTIVE".equals(targetStatus)) {
@@ -210,14 +222,14 @@ public class ReportService {
                 }
                 case COMMENT -> {
                     var commentPreview = commentService.getCommentPreviewForModeration(report.getTargetId());
-                    
+
                     if (commentPreview == null) {
                         targetExists = false;
                         targetStatus = "DELETED";
                     } else {
                         targetExists = true;
                         isMyContentReported = commentPreview.getAuthorId().equals(currentUserId);
-                        
+
                         if (Boolean.TRUE.equals(commentPreview.getIsHiddenByAdmin())) {
                             targetStatus = "HIDDEN_BY_ADMIN";
                         } else if (Boolean.TRUE.equals(commentPreview.getIsHiddenByAuthor())) {
@@ -226,7 +238,7 @@ public class ReportService {
                             targetStatus = "DELETED";
                             targetExists = false;
                         }
-                        
+
                         if (isMyContentReported || "ACTIVE".equals(targetStatus)) {
                             targetContentPreview = commentPreview.getContent();
                         }
@@ -240,17 +252,17 @@ public class ReportService {
         }
 
         return MyReportResponse.builder()
-            .id(report.getId())
-            .targetType(report.getTargetType())
-            .targetId(report.getTargetId())
-            .reasonType(report.getReasonType())
-            .reasonText(report.getReasonText())
-            .status(report.getStatus())
-            .createdAt(report.getCreatedAt())
-            .targetExists(targetExists)
-            .targetStatus(targetStatus)
-            .targetContentPreview(targetContentPreview)
-            .isMyContentReported(isMyContentReported)
-            .build();
+                .id(report.getId())
+                .targetType(report.getTargetType())
+                .targetId(report.getTargetId())
+                .reasonType(report.getReasonType())
+                .reasonText(report.getReasonText())
+                .status(report.getStatus())
+                .createdAt(report.getCreatedAt())
+                .targetExists(targetExists)
+                .targetStatus(targetStatus)
+                .targetContentPreview(targetContentPreview)
+                .isMyContentReported(isMyContentReported)
+                .build();
     }
 }

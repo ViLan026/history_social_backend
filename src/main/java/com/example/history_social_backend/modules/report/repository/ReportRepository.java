@@ -15,15 +15,17 @@ import com.example.history_social_backend.modules.report.domain.ReportTargetType
 @Repository
 public interface ReportRepository extends JpaRepository<Report, UUID> {
 
-    boolean existsByReporterIdAndTargetTypeAndTargetId( UUID reporterId, ReportTargetType targetType, UUID targetId);
+    boolean existsByReporterIdAndTargetTypeAndTargetId(UUID reporterId, ReportTargetType targetType, UUID targetId);
 
     long countByTargetTypeAndTargetId(ReportTargetType targetType, UUID targetId);
 
     Page<Report> findByStatus(ReportStatus status, Pageable pageable);
 
     List<Report> findByTargetTypeAndTargetId(ReportTargetType targetType, UUID targetId);
-    
+
     Page<Report> findByReporterId(UUID reporterId, Pageable pageable);
-    
+
     Page<Report> findByTargetId(UUID targetId, Pageable pageable);
+
+    Page<Report> findByStatusAndTargetType(ReportStatus status, ReportTargetType targetType, Pageable pageable);
 }

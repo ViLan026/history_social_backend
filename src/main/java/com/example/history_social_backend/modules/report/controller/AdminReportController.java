@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
+import com.example.history_social_backend.modules.report.domain.ReportTargetType;
 import com.example.history_social_backend.modules.report.dto.request.ReviewReportRequest;
 import com.example.history_social_backend.modules.report.dto.response.ModerationReportResponse;
 import com.example.history_social_backend.modules.report.dto.response.ReportResponse;
@@ -32,18 +33,18 @@ public class AdminReportController {
 
     @GetMapping("/pending")
     public ApiResponse<PageResponse<ModerationReportResponse>> getPendingReports(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size
-    ) {
-        PageResponse<ModerationReportResponse> response = reportService.getPendingReports(page, size);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) ReportTargetType targetType) {
+        PageResponse<ModerationReportResponse> response = reportService.getPendingReports(page, size, targetType);
+
         return ApiResponse.success(response);
     }
 
     @PatchMapping("/{id}/review")
     public ApiResponse<ReportResponse> reviewReport(
-        @PathVariable UUID id,
-        @Valid @RequestBody ReviewReportRequest request
-    ) {
+            @PathVariable UUID id,
+            @Valid @RequestBody ReviewReportRequest request) {
         ReportResponse response = reportService.reviewReport(id, request);
         return ApiResponse.success("Đã xét duyệt báo cáo thành công", response);
     }

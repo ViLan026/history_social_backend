@@ -95,6 +95,7 @@ public class UserQueryService {
                         .avatarUrl(user.getProfile() != null ? user.getProfile().getAvatarUrl() : null)
                         .build()));
     }
+    
     public Map<UUID, ProfileResponse> getUsergetUserFollowInfoMap(Set<UUID> userIds) {
         List<User> users = userRepository.findAllById(userIds);
 

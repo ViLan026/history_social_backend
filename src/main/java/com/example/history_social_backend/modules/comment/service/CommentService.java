@@ -9,12 +9,14 @@ import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.mapper.CommentMapper;
 import com.example.history_social_backend.modules.comment.repository.CommentRepository;
+import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
+import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.service.UserQueryService;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+// import jakarta.persistence.EntityManager;
+// import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,9 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
-import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,38 +44,43 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    @PersistenceContext
-    private final EntityManager entityManager;
+    // @PersistenceContext
+    // private final EntityManager entityManager;
+
 
     @Transactional
     public CommentResponse createComment(CommentRequest request) {
-
         UUID authorId = SecurityUtils.getCurrentUserId();
         UUID postId = request.getPostId();
 
         postQueryService.increaseCommentCount(postId);
 
+        if (request.getParentId() != null) {
+            commentRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        }
+
         Comment comment = new Comment();
-        comment.setPostId(request.getPostId());
+        comment.setPostId(postId);
         comment.setAuthorId(authorId);
+        comment.setParentId(request.getParentId());
         comment.setContent(request.getContent());
 
         comment.validateContent();
 
         Comment savedComment = commentRepository.save(comment);
-        UserReactionResponse actorProfile = userQueryService.getUserInfo(authorId);
+        FeedPostResponse post = postQueryService.getPostById(postId);
 
         applicationEventPublisher.publishEvent(
                 CommentCreatedEvent.builder()
                         .postId(postId)
                         .commentId(savedComment.getId())
                         .actorId(authorId)
-                        .recipientId(actorProfile.getUserId())
-                        .senderName(actorProfile.getDisplayName())
+                        .recipientId(post.getAuthor().getUserId())
+                        .senderName(post.getAuthor().getDisplayName())
                         .build());
 
-        CommentResponse response = commentMapper.toResponse(savedComment);
-        return response;
+        return commentMapper.toResponse(savedComment);
     }
 
     @Transactional(readOnly = true)
@@ -81,10 +90,30 @@ public class CommentService {
 
         Page<Comment> commentPage = commentRepository.findByPostIdAndNotDeleted(postId, pageable);
 
-        Page<CommentResponse> responsePage = commentPage.map(commentMapper::toResponse);
-        PageResponse<CommentResponse> pageResponse = PageResponse.from(responsePage);
+        // Lấy toàn bộ authorId trong page hiện tại
+        Set<UUID> authorIds = commentPage.getContent()
+                .stream()
+                .map(Comment::getAuthorId)
+                .collect(Collectors.toSet());
 
-        return pageResponse;
+        // Query 1 lần
+        Map<UUID, UserReactionResponse> userMap = userQueryService.getUserReactionInfoMap(authorIds);
+
+        Page<CommentResponse> responsePage = commentPage.map(comment -> {
+
+            CommentResponse response = commentMapper.toResponse(comment);
+
+            UserReactionResponse userInfo = userMap.get(comment.getAuthorId());
+
+            if (userInfo != null) {
+                response.setAuthorName(userInfo.getDisplayName());
+                response.setAuthorAvatarUrl(userInfo.getAvatarUrl());
+            }
+
+            return response;
+        });
+
+        return PageResponse.from(responsePage);
     }
 
     @Transactional
@@ -119,6 +148,13 @@ public class CommentService {
 
     public boolean existsById(UUID id) {
         return commentRepository.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public UUID getPostIdByCommentId(UUID commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND))
+                .getPostId();
     }
 
     @Transactional(readOnly = true)

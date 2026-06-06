@@ -1,24 +1,30 @@
 package com.example.history_social_backend.modules.notification.service;
 
-import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
+import com.example.history_social_backend.modules.comment.service.CommentService;
 import com.example.history_social_backend.modules.notification.domain.Notification;
 import com.example.history_social_backend.modules.notification.domain.NotificationType;
 import com.example.history_social_backend.modules.notification.dto.CreateNotificationRequest;
 import com.example.history_social_backend.modules.notification.dto.NotificationResponse;
+import com.example.history_social_backend.modules.notification.dto.NotificationUserResponse;
 import com.example.history_social_backend.modules.notification.mapper.NotificationMapper;
 import com.example.history_social_backend.modules.notification.repository.NotificationRepository;
+import com.example.history_social_backend.modules.user.dto.response.ProfileResponse;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.AccessLevel;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +33,8 @@ public class NotificationService {
 
     NotificationRepository notificationRepository;
     NotificationMapper notificationMapper;
+    UserQueryService userQueryService;
+    CommentService commentQueryService;
 
     @Transactional
     public NotificationResponse createNotification(CreateNotificationRequest request) {
@@ -42,11 +50,9 @@ public class NotificationService {
                 .recipientId(request.getRecipientId())
                 .actorId(request.getActorId())
                 .type(request.getType())
-                // .title(request.getTitle())
                 .content(request.getMessage())
                 .referenceId(request.getTargetId())
-                // .targetType(request.getTargetType())
-                .isRead(false)
+                .read(false)
                 .build();
 
         return notificationMapper.toResponse(notificationRepository.save(notification));
@@ -57,47 +63,81 @@ public class NotificationService {
             UUID recipientId,
             UUID actorId,
             NotificationType type,
-            String title,
             String message,
-            UUID targetId,
-            String targetType) {
+            UUID targetId) {
         return createNotification(CreateNotificationRequest.builder()
                 .recipientId(recipientId)
                 .actorId(actorId)
                 .type(type)
-                .title(title)
                 .message(message)
                 .targetId(targetId)
-                .targetType(targetType)
                 .build());
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<NotificationResponse> getMyNotifications(int page, int size) {
+    public Page<NotificationUserResponse> getMyNotifications(Pageable pageable) {
+
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Notification> notificationPage = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(
+                currentUserId,
+                pageable);
 
-        Page<NotificationResponse> responsePage = notificationRepository
-                .findByRecipientIdOrderByCreatedAtDesc(currentUserId, pageable)
-                .map(notificationMapper::toResponse);
+        Set<UUID> actorIds = notificationPage.getContent()
+                .stream()
+                .map(Notification::getActorId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
-        return PageResponse.<NotificationResponse>builder()
-                .currentPage(responsePage.getNumber())
-                .size(responsePage.getSize())
-                .totalPages(responsePage.getTotalPages())
-                .totalElements(responsePage.getTotalElements())
-                .content(responsePage.getContent())
-                .build();
+        Map<UUID, ProfileResponse> userMap = userQueryService.getUsergetUserFollowInfoMap(actorIds);
+
+        return notificationPage.map(notification -> {
+
+            NotificationUserResponse response = notificationMapper.toUserResponse(notification);
+
+            ProfileResponse actor = userMap.get(notification.getActorId());
+
+            if (actor != null) {
+                response.setDisplayName(actor.getDisplayName());
+                response.setAvatarUrl(actor.getAvatarUrl());
+            }
+
+            enrichNavigationData(notification, response);
+
+            return response;
+        });
+    }
+
+    private void enrichNavigationData(
+            Notification notification,
+            NotificationUserResponse response) {
+        UUID referenceId = notification.getReferenceId();
+
+        if (referenceId == null || notification.getType() == null) {
+            return;
+        }
+
+        NotificationType type = notification.getType();
+
+        switch (type) {
+            case COMMENT, REPLY -> {
+                response.setCommentId(referenceId);
+                response.setPostId(commentQueryService.getPostIdByCommentId(referenceId));
+            }
+
+            case REACTION, POST -> response.setPostId(referenceId);
+
+            case REPORT -> response.setReportId(referenceId);
+
+            default -> {
+            }
+        }
     }
 
     @Transactional(readOnly = true)
     public long countUnreadNotifications() {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
-        return notificationRepository.countByRecipientIdAndIsReadFalse(currentUserId);
+        return notificationRepository.countByRecipientIdAndReadFalse(currentUserId);
     }
 
     @Transactional
@@ -115,4 +155,5 @@ public class NotificationService {
         // notification.setIsRead(true);
         notificationRepository.save(notification);
     }
+
 }

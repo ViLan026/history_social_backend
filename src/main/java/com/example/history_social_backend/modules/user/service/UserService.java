@@ -43,7 +43,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserQueryService userQueryService;
 
-
     @Transactional(readOnly = true)
     public Page<UserSummaryResponse> getAllUsers(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size,
@@ -87,6 +86,7 @@ public class UserService {
         Profile profile = Profile.builder()
                 .user(user)
                 .username(generatedUsername)
+                .displayName(generatedUsername)
                 .build();
         user.setProfile(profile);
 
@@ -175,7 +175,5 @@ public class UserService {
         user.setStatus(AccountStatus.ACTIVE);
         return userMapper.toResponse(userRepository.save(user));
     }
-
-
 
 }

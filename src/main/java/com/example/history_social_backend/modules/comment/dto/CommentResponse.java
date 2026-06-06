@@ -16,6 +16,9 @@ public class CommentResponse {
     UUID id;
     UUID postId;
     UUID authorId;
+    String authorAvatarUrl;
+    String authorName;
+    UUID parentId;
     String content;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;

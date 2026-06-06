@@ -75,15 +75,15 @@ public class Post extends BaseEntity {
 
     @Column(name = "bookmark_count", nullable = false)
     @Builder.Default
-    Long bookmarkCount  = 0L;
+    Long bookmarkCount = 0L;
 
     @Column(name = "report_count", nullable = false)
     @Builder.Default
-    Long reportCount  = 0L;
+    Long reportCount = 0L;
 
     @Column(name = "quality_score", nullable = false)
     @Builder.Default
-    double qualityScore   = 0.5;
+    double qualityScore = 0.5;
 
     LocalDateTime deletedAt;
 

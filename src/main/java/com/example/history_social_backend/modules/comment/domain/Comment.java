@@ -17,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Comment extends BaseEntity {
 
@@ -41,6 +42,12 @@ public class Comment extends BaseEntity {
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
 
+    @Column(name = "is_visible", nullable = false)
+    @Builder.Default
+    Boolean isVisible = true;
+
+    @Column(name = "hidden_reason", columnDefinition = "TEXT")
+    String hiddenReason;
 
     public void validateContent() {
         if (content == null || content.replaceAll("[\\p{P}\\s]", "").isEmpty()) {

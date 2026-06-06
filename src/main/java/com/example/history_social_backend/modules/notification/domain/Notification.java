@@ -5,7 +5,6 @@ import com.example.history_social_backend.common.utils.UuidV7;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.Builder.Default;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
@@ -43,9 +42,9 @@ public class Notification extends BaseEntity {
 
     @Column(name = "is_read", nullable = false)
     @Builder.Default
-    boolean isRead = false;
+    boolean read = false;
 
     public void markAsRead() {
-        this.isRead = true;
+        this.read = true;
     }
 }

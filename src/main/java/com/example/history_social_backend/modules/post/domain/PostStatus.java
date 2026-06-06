@@ -5,6 +5,6 @@ public enum PostStatus {
     PUBLISHED,
     HIDDEN,        // người dùng ẩn bài viết
     FLAGGED,      // bị báo cáo nên gắn cờ để xem xét
-    REJECTED,    // hệ thống check thấy vi phạm
+    REJECTED,    // admin check thấy vi phạm
 }
  

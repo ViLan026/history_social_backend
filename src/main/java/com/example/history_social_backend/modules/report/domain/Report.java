@@ -13,7 +13,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
@@ -21,6 +24,9 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @Entity
 @Table(name = "reports")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Report extends BaseEntity {
 
@@ -36,6 +42,11 @@ public class Report extends BaseEntity {
     @Column(name = "target_type", nullable = false, length = 30)
     ReportTargetType targetType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "report_type", nullable = false)
+    @Builder.Default
+    ReportType reportType = ReportType.REPORT;
+
     @Column(name = "target_id", nullable = false, columnDefinition = "uuid")
     UUID targetId;
 
@@ -48,10 +59,14 @@ public class Report extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
+    @Builder.Default
     ReportStatus status = ReportStatus.PENDING;
 
     @Column(name = "reviewed_by", columnDefinition = "uuid")
     UUID reviewedBy;
+
+    @Column(name = "admin_note", columnDefinition = "TEXT")
+    String adminNote;
 
     @Column(name = "reviewed_at")
     LocalDateTime reviewedAt;

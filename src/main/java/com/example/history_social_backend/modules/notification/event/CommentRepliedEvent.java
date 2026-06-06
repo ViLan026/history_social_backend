@@ -1,18 +1,23 @@
 package com.example.history_social_backend.modules.notification.event;
-import java.util.UUID;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
+
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReactionCreatedEvent {
+public class CommentRepliedEvent {
+
     UUID postId;
-    UUID reactionId;
+    UUID parentCommentId;
+    UUID replyCommentId;
     UUID actorId;
     UUID recipientId;
     String senderName;
-    String reactionType;
 }

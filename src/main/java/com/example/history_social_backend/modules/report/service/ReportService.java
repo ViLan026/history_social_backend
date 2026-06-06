@@ -122,9 +122,12 @@ public class ReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
 
-        // Validate status transition
         if (report.getStatus() != ReportStatus.PENDING) {
-            throw new AppException(ErrorCode.REPORT_ALREADY_EXISTS); 
+            throw new AppException(ErrorCode.REPORT_ALREADY_REVIEWED);
+        }
+
+        if (request.getStatus() == ReportStatus.RESOLVED) {
+            handleConfirmedViolation(report);
         }
 
         report.setStatus(request.getStatus());
@@ -132,10 +135,15 @@ public class ReportService {
         report.setReviewedAt(LocalDateTime.now());
 
         Report updatedReport = reportRepository.save(report);
-        log.info("Admin {} reviewed report {} with status {}",
-                adminUserId, reportId, request.getStatus());
 
         return reportMapper.toReportResponse(updatedReport);
+    }
+
+    private void handleConfirmedViolation(Report report) {
+        switch (report.getTargetType()) {
+            case POST -> postQueryService.rejectPostByAdmin(report.getTargetId());
+            case COMMENT -> commentService.deleteCommentByAdmin(report.getTargetId());
+        }
     }
 
     @Transactional(readOnly = true)

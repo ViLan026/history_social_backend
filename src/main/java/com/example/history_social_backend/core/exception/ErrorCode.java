@@ -49,7 +49,7 @@ public enum ErrorCode {
     MEDIA_INVALID_PUBLIC_ID(4004, "PublicId không hợp lệ", HttpStatus.BAD_REQUEST),
     MEDIA_FILE_TOO_LARGE(4005, "File vượt quá giới hạn cho phép", HttpStatus.BAD_REQUEST),
 
-    //  Modules.Post
+    // Modules.Post
     POST_NOT_FOUND(3000, "Bài viết không tồn tại", HttpStatus.NOT_FOUND),
     POST_FORBIDDEN(3001, "Bạn không có quyền thực hiện thao tác này", HttpStatus.FORBIDDEN),
     POST_ALREADY_DELETED(3002, "Bài viết đã bị xóa trước đó", HttpStatus.CONFLICT),
@@ -60,27 +60,29 @@ public enum ErrorCode {
     FILE_TOO_LARGE(3006, "File vượt quá giới hạn dung lượng", HttpStatus.BAD_REQUEST),
 
     TAG_NOT_FOUND(3007, "Tag không tồn tại", HttpStatus.NOT_FOUND),
+    INVALID_POST_STATUS(3008, "Trạng thái bài viết không hợp lệ", HttpStatus.BAD_REQUEST),
 
-    //  Modules.Comment
+    // Modules.Comment
     COMMENT_NOT_FOUND(4001, "Không tìm thấy bình luận", HttpStatus.NOT_FOUND),
     COMMENT_ALREADY_DELETED(4002, "Bình luận đã bị xóa", HttpStatus.BAD_REQUEST),
     INVALID_COMMENT_CONTENT(4003,
             "Nội dung bình luận không hợp lệ. Bình luận không được để trống hoặc chỉ chứa dấu câu",
             HttpStatus.BAD_REQUEST),
     DELETE_COMMENT_FORBIDDEN(4004, "Bạn không có quyền xóa bình luận này", HttpStatus.FORBIDDEN),
-
-    //  Modules.Notification
+    COMMENT_CONTAINS_HATE_SPEECH(4005, "Bình luận chứa nội dung không phù hợp", HttpStatus.BAD_REQUEST),
+    AI_SERVICE_UNAVAILABLE(4006, "Dịch vụ AI hiện không khả dụng", HttpStatus.SERVICE_UNAVAILABLE),
+    // Modules.Notification
     NOTIFICATION_NOT_FOUND(5001, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
 
-    //  Modules.OnThisDay
+    // Modules.OnThisDay
     ON_THIS_DAY_NOT_FOUND(6001, "Không tìm thấy sự kiện ngày này năm xưa", HttpStatus.NOT_FOUND),
 
     // module.report
     REPORT_NOT_FOUND(7001, "Không tìm thấy báo cáo", HttpStatus.NOT_FOUND),
     REPORT_ALREADY_EXISTS(7002, "Bạn đã báo cáo nội dung này trước đó", HttpStatus.BAD_REQUEST),
+    REPORT_ALREADY_REVIEWED(7003, "Báo cáo này đã được xử lí", HttpStatus.BAD_REQUEST),
 
-
-    // module.follow 
+    // module.follow
     FOLLOW_NOT_FOUND(8001, "Không tìm thấy follow nào", HttpStatus.NOT_FOUND),
 
     ;

@@ -54,8 +54,6 @@ public class PostQueryService {
         return response;
     }
 
-    
-
     @Transactional(readOnly = true)
     public Page<FeedPostResponse> getPublishedPosts(Pageable pageable) {
 
@@ -148,6 +146,7 @@ public class PostQueryService {
                 .content(contentPreview)
                 .authorId(post.getAuthorId())
                 .authorName(authorName)
+                .targetStatus(post.getStatus().name())
                 .isDeleted(post.getDeletedAt() != null)
                 .isHiddenByAdmin(false)
                 .isHiddenByAuthor(post.getStatus() == PostStatus.DRAFT || post.getStatus() == PostStatus.HIDDEN)
@@ -213,4 +212,32 @@ public class PostQueryService {
         postRepository.decrementReactionCount(postId);
     }
 
+    // @Transactional
+    // public void rejectPostByAdmin(UUID postId) {
+    // Post post = postRepository.findById(postId)
+    // .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+    // post.setStatus(PostStatus.REJECTED);
+    // postRepository.save(post);
+    // }
+
+    @Transactional
+    public void updatePostStatusByAdmin(UUID postId, PostStatus status) {
+        if (status != PostStatus.PUBLISHED
+                && status != PostStatus.FLAGGED
+                && status != PostStatus.REJECTED) {
+            throw new AppException(ErrorCode.INVALID_POST_STATUS);
+        }
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        post.setStatus(status);
+        postRepository.save(post);
+    }
+
+    @Transactional
+    public void rejectPostByAdmin(UUID postId) {
+        updatePostStatusByAdmin(postId, PostStatus.REJECTED);
+    }
 }

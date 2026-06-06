@@ -2,7 +2,6 @@ package com.example.history_social_backend.modules.reaction.service;
 
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.security.SecurityUtils;
-import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
 import com.example.history_social_backend.modules.reaction.domain.ReactionType;

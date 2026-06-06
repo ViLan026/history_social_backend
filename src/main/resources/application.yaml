@@ -46,4 +46,6 @@ messaging:
       max-retry-count: 5
       claim-min-idle-time: 300000  # 5 minutes
 
-
+ai:
+  service:
+    base-url: http://localhost:8000

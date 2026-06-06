@@ -28,6 +28,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
 
+    Page<Post> findAll(Pageable pageable);
+
     Page<Post> findByStatus(PostStatus status, Pageable pageable);
 
     // Tìm kiếm full-text đơn giản trong title và content.

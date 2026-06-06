@@ -4,6 +4,8 @@ import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
+import com.example.history_social_backend.modules.ai.dto.response.AiHateSpeechResponse;
+import com.example.history_social_backend.modules.ai.service.AiModerationService;
 import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
@@ -43,6 +45,9 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final AiModerationService aiModerationService;
+    private final CommentHateSpeechService commentHateSpeechService;
+
     @Transactional
     public CommentResponse createComment(CommentRequest request) {
         UUID authorId = SecurityUtils.getCurrentUserId();
@@ -66,6 +71,12 @@ public class CommentService {
         comment.validateContent();
 
         Comment savedComment = commentRepository.save(comment);
+
+        AiHateSpeechResponse hsdResult = aiModerationService.detectCommentHateSpeech(request.getContent());
+
+        if (commentHateSpeechService.isHateSpeech(hsdResult)) {
+            throw new AppException(ErrorCode.COMMENT_CONTAINS_HATE_SPEECH);
+        }
 
         FeedPostResponse post = postQueryService.getPostById(postId);
         UUID postOwnerId = post.getAuthor().getUserId();
@@ -272,5 +283,14 @@ public class CommentService {
                             .build();
                 })
                 .orElse(null);
+    }
+
+    @Transactional
+    public void deleteCommentByAdmin(UUID commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+
+        comment.markAsDeleted();
+        commentRepository.save(comment);
     }
 }

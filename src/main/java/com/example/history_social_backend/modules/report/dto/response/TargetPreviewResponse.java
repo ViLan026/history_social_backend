@@ -1,5 +1,6 @@
 package com.example.history_social_backend.modules.report.dto.response;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.AccessLevel;
@@ -17,10 +18,19 @@ import lombok.experimental.FieldDefaults;
 public class TargetPreviewResponse {
 
     UUID id;
+    String title;
     String content;
+
     UUID authorId;
-    String authorName;  
+    String authorName;
+
+    String targetStatus;
+    Long reportCount;
+
     Boolean isDeleted;
     Boolean isHiddenByAdmin;
     Boolean isHiddenByAuthor;
+
+    List<PostFactCheckClaimResponse> factCheckClaims;
+    HateSpeechResultResponse hateSpeechResult;
 }

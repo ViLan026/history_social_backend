@@ -81,9 +81,9 @@ public class Post extends BaseEntity {
     @Builder.Default
     Long reportCount = 0L;
 
-    @Column(name = "quality_score", nullable = false)
-    @Builder.Default
-    double qualityScore = 0.5;
+    // @Column(name = "quality_score", nullable = false)
+    // @Builder.Default
+    // double qualityScore = 0.5;
 
     LocalDateTime deletedAt;
 

@@ -65,15 +65,15 @@ public class ReactionService {
 
             reactionRepository.save(newReaction);
             postQueryService.increaseReactionCount(postId);
-            FeedPostResponse post = postQueryService.getPostById(postId);
+            UserReactionResponse actor = userQueryService.getUserInfo(authorId);
 
             eventPublisher.publishEvent(
                     ReactionCreatedEvent.builder()
                             .postId(postId)
                             .reactionId(newReaction.getId())
                             .actorId(authorId)
-                            .recipientId(post.getAuthor().getUserId())
-                            .senderName(post.getAuthor().getDisplayName())
+                            .recipientId(actor.getUserId())
+                            .senderName(actor.getDisplayName())
                             .reactionType(newReaction.getType().name())
                             .build());
 

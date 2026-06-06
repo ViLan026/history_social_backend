@@ -15,8 +15,6 @@ import com.example.history_social_backend.modules.report.dto.response.TargetPrev
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
 import com.example.history_social_backend.modules.user.service.UserQueryService;
 
-// import jakarta.persistence.EntityManager;
-// import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
+import com.example.history_social_backend.modules.notification.event.CommentRepliedEvent;
 
 import java.util.Map;
 import java.util.Set;
@@ -44,10 +43,6 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    // @PersistenceContext
-    // private final EntityManager entityManager;
-
-
     @Transactional
     public CommentResponse createComment(CommentRequest request) {
         UUID authorId = SecurityUtils.getCurrentUserId();
@@ -55,8 +50,10 @@ public class CommentService {
 
         postQueryService.increaseCommentCount(postId);
 
+        Comment parentComment = null;
+
         if (request.getParentId() != null) {
-            commentRepository.findById(request.getParentId())
+            parentComment = commentRepository.findById(request.getParentId())
                     .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
         }
 
@@ -69,18 +66,112 @@ public class CommentService {
         comment.validateContent();
 
         Comment savedComment = commentRepository.save(comment);
+
         FeedPostResponse post = postQueryService.getPostById(postId);
+        UUID postOwnerId = post.getAuthor().getUserId();
+
+        UserReactionResponse actorProfile = userQueryService.getUserInfo(authorId);
+        String senderName = actorProfile.getDisplayName();
+
+        if (parentComment == null) {
+            publishCommentNotification(
+                    postId,
+                    savedComment.getId(),
+                    authorId,
+                    postOwnerId,
+                    senderName);
+        } else {
+            UUID parentCommentAuthorId = parentComment.getAuthorId();
+
+            publishReplyNotification(
+                    postId,
+                    parentComment.getId(),
+                    savedComment.getId(),
+                    authorId,
+                    parentCommentAuthorId,
+                    senderName);
+
+            publishCommentNotificationToPostOwnerAfterReply(
+                    postId,
+                    savedComment.getId(),
+                    authorId,
+                    postOwnerId,
+                    parentCommentAuthorId,
+                    senderName);
+        }
+
+        return commentMapper.toResponse(savedComment);
+    }
+
+    private void publishCommentNotification(
+            UUID postId,
+            UUID commentId,
+            UUID actorId,
+            UUID postOwnerId,
+            String senderName) {
+        if (postOwnerId == null || postOwnerId.equals(actorId)) {
+            return;
+        }
 
         applicationEventPublisher.publishEvent(
                 CommentCreatedEvent.builder()
                         .postId(postId)
-                        .commentId(savedComment.getId())
-                        .actorId(authorId)
-                        .recipientId(post.getAuthor().getUserId())
-                        .senderName(post.getAuthor().getDisplayName())
+                        .commentId(commentId)
+                        .actorId(actorId)
+                        .recipientId(postOwnerId)
+                        .senderName(senderName)
                         .build());
+    }
 
-        return commentMapper.toResponse(savedComment);
+    private void publishReplyNotification(
+            UUID postId,
+            UUID parentCommentId,
+            UUID replyCommentId,
+            UUID actorId,
+            UUID parentCommentAuthorId,
+            String senderName) {
+        if (parentCommentAuthorId == null || parentCommentAuthorId.equals(actorId)) {
+            return;
+        }
+
+        applicationEventPublisher.publishEvent(
+                CommentRepliedEvent.builder()
+                        .postId(postId)
+                        .parentCommentId(parentCommentId)
+                        .replyCommentId(replyCommentId)
+                        .actorId(actorId)
+                        .recipientId(parentCommentAuthorId)
+                        .senderName(senderName)
+                        .build());
+    }
+
+    private void publishCommentNotificationToPostOwnerAfterReply(
+            UUID postId,
+            UUID replyCommentId,
+            UUID actorId,
+            UUID postOwnerId,
+            UUID parentCommentAuthorId,
+            String senderName) {
+        if (postOwnerId == null) {
+            return;
+        }
+
+        if (postOwnerId.equals(actorId)) {
+            return;
+        }
+
+        if (postOwnerId.equals(parentCommentAuthorId)) {
+            return;
+        }
+
+        applicationEventPublisher.publishEvent(
+                CommentCreatedEvent.builder()
+                        .postId(postId)
+                        .commentId(replyCommentId)
+                        .actorId(actorId)
+                        .recipientId(postOwnerId)
+                        .senderName(senderName)
+                        .build());
     }
 
     @Transactional(readOnly = true)

@@ -17,4 +17,6 @@ public class ProfileResponse {
     String username;
     String avatarUrl;
     String bio;
+    Long followingCount;
+    Long followerCount;
 }

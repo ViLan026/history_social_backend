@@ -98,7 +98,11 @@ public class NotificationService {
             ProfileResponse actor = userMap.get(notification.getActorId());
 
             if (actor != null) {
-                response.setDisplayName(actor.getDisplayName());
+                String displayName = actor.getDisplayName();
+                String name = (displayName != null && !displayName.trim().isEmpty())
+                        ? displayName.trim()
+                        : actor.getUsername();
+                response.setDisplayName(name);
                 response.setAvatarUrl(actor.getAvatarUrl());
             }
 

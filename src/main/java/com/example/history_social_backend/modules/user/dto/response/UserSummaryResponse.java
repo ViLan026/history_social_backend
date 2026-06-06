@@ -26,4 +26,5 @@ public class UserSummaryResponse {
     Set<Role> roles;
     String username;
     LocalDateTime createdAt;
+
 }

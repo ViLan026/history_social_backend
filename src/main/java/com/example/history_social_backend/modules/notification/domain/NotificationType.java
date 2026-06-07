@@ -8,5 +8,6 @@ public enum NotificationType {
     SYSTEM,
     POST,
     REPORT,
-    REPLY
+    REPLY,
+    HSD
 }

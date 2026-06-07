@@ -2,6 +2,7 @@ package com.example.history_social_backend.modules.notification.listener;
 
 import com.example.history_social_backend.modules.notification.domain.NotificationType;
 import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
+import com.example.history_social_backend.modules.notification.event.CommentHiddenByHsdEvent;
 import com.example.history_social_backend.modules.notification.event.CommentRepliedEvent;
 import com.example.history_social_backend.modules.notification.event.PostStatusChangedEvent;
 import com.example.history_social_backend.modules.notification.event.ReactionCreatedEvent;
@@ -186,4 +187,24 @@ public class NotificationEventListener {
         }
         return message + ". Lý do: " + reason;
     }
+
+    @EventListener
+    public void handleCommentHiddenByHsd(CommentHiddenByHsdEvent event) {
+        if (event == null || event.getRecipientId() == null || event.getCommentId() == null) {
+            return;
+        }
+
+        notificationService.createNotification(
+                event.getRecipientId(),
+                null,
+                NotificationType.HSD,
+                buildReasonMessage(
+                        "Bình luận của bạn đã bị thu hồi vì vi phạm tiêu chuẩn cộng đồng",
+                        event.getReason()),
+                event.getCommentId());
+
+        log.info("Created HSD notification: recipient={}, comment={}",
+                event.getRecipientId(), event.getCommentId());
+    }
+
 }

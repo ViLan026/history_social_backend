@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AiFactCheckResponse {
     private UUID postId;
-    private Double qualityScore;
+    // private Double qualityScore;
     private String postLabel;
     private List<AiClaimResponse> claims;
 }

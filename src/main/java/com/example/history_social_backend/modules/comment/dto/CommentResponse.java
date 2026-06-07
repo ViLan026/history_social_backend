@@ -22,4 +22,6 @@ public class CommentResponse {
     String content;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    Boolean isVisible;
+    String hiddenReason;
 }

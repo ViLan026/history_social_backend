@@ -17,6 +17,6 @@ public class TopReportedPostResponse {
     private UUID authorId;
     private String status;
     private long reportCount;
-    private Double qualityScore;
+    // private Double qualityScore;
     private LocalDateTime createdAt;
 }

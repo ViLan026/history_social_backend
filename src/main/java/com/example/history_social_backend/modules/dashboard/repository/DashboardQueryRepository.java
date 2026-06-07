@@ -105,10 +105,10 @@ public class DashboardQueryRepository {
     // Top bài viết bị report nhiều nhất.
     public List<Object[]> findTopReportedPosts(int limit) {
         return em.createQuery(
-                "SELECT p.id, p.title, p.authorId, p.status, p.qualityScore, p.createdAt, COUNT(r) " +
+                "SELECT p.id, p.title, p.authorId, p.status, p.createdAt, COUNT(r) " +
                         "FROM Post p JOIN Report r ON r.targetId = p.id " +
                         "WHERE r.targetType = 'POST' " +
-                        "GROUP BY p.id, p.title, p.authorId, p.status, p.qualityScore, p.createdAt " +
+                        "GROUP BY p.id, p.title, p.authorId, p.status, p.createdAt " +
                         "ORDER BY COUNT(r) DESC",
                 Object[].class)
                 .setMaxResults(limit)

@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
+import com.example.history_social_backend.modules.notification.event.CommentHiddenByHsdEvent;
 import com.example.history_social_backend.modules.notification.event.CommentRepliedEvent;
 
 import java.util.Map;
@@ -53,8 +54,6 @@ public class CommentService {
         UUID authorId = SecurityUtils.getCurrentUserId();
         UUID postId = request.getPostId();
 
-        postQueryService.increaseCommentCount(postId);
-
         Comment parentComment = null;
 
         if (request.getParentId() != null) {
@@ -74,9 +73,28 @@ public class CommentService {
 
         AiHateSpeechResponse hsdResult = aiModerationService.detectCommentHateSpeech(request.getContent());
 
-        if (commentHateSpeechService.isHateSpeech(hsdResult)) {
-            throw new AppException(ErrorCode.COMMENT_CONTAINS_HATE_SPEECH);
+        commentHateSpeechService.saveResult(savedComment, hsdResult);
+        
+        boolean isViolation = commentHateSpeechService.isHateSpeech(hsdResult);
+
+        if (isViolation) {
+            savedComment.setIsVisible(false);
+            savedComment.setHiddenReason("HATE_SPEECH");
+            savedComment = commentRepository.save(savedComment);
+
+            applicationEventPublisher.publishEvent(
+                    CommentHiddenByHsdEvent.builder()
+                            .commentId(savedComment.getId())
+                            .postId(postId)
+                            .actorId(null)
+                            .recipientId(authorId)
+                            .reason("Hệ thống phát hiện bình luận có nội dung không phù hợp.")
+                            .build());
+
+            return commentMapper.toResponse(savedComment);
         }
+
+        postQueryService.increaseCommentCount(postId);
 
         FeedPostResponse post = postQueryService.getPostById(postId);
         UUID postOwnerId = post.getAuthor().getUserId();

@@ -145,9 +145,9 @@ public DashboardOverviewResponse getOverview() {
                         .title((String) row[1])
                         .authorId(toUUID(row[2]))
                         .status(row[3] != null ? row[3].toString() : null)
-                        .qualityScore(row[4] != null ? ((Number) row[4]).doubleValue() : null)
-                        .createdAt((LocalDateTime) row[5])
-                        .reportCount(((Number) row[6]).longValue())
+                        // .qualityScore(row[4] != null ? ((Number) row[4]).doubleValue() : null)
+                        .createdAt((LocalDateTime) row[4])
+                        .reportCount(((Number) row[5]).longValue())
                         .build())
                 .collect(Collectors.toList());
     }

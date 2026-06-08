@@ -6,7 +6,10 @@ import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
+import com.example.history_social_backend.modules.post.dto.response.PostFactCheckDetailResponse;
+import com.example.history_social_backend.modules.post.dto.response.PostFactCheckPreviewResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
+import com.example.history_social_backend.modules.post.service.PostFactCheckService;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.post.service.PostService;
 import jakarta.validation.Valid;
@@ -29,6 +32,7 @@ public class PostController {
 
     private final PostService postService;
     private final PostQueryService postQueryService;
+    private final PostFactCheckService postFactCheckService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -41,7 +45,7 @@ public class PostController {
         return ApiResponse.success(response);
     }
 
-    // xem chi tiết bài viết 
+    // xem chi tiết bài viết
     @GetMapping("/{id}")
     public ApiResponse<FeedPostResponse> getPost(@PathVariable UUID id) {
         return ApiResponse.success(postQueryService.getPostById(id));
@@ -49,17 +53,13 @@ public class PostController {
 
     @GetMapping("/home")
     public ApiResponse<PageResponse<FeedPostResponse>> getPublicHomePosts(
-            @PageableDefault( size = 10, sort = "createdAt")
-            Pageable pageable
-    ) {
-        Page<FeedPostResponse> pageData =
-                postQueryService.getPublicPublishedPosts(pageable);
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+        Page<FeedPostResponse> pageData = postQueryService.getPublicPublishedPosts(pageable);
 
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
-
-    // trang chủ khi người dùng đã đăng nhập 
+    // trang chủ khi người dùng đã đăng nhập
     @GetMapping
     public ApiResponse<PageResponse<FeedPostResponse>> getPublishedPosts(
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
@@ -68,7 +68,7 @@ public class PostController {
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
-    // xem danh sách bài viết của một tác giả nào đó 
+    // xem danh sách bài viết của một tác giả nào đó
     @GetMapping("/author/{authorId}")
     public ApiResponse<PageResponse<FeedPostResponse>> getPostsByAuthor(
             @PathVariable UUID authorId,
@@ -78,7 +78,7 @@ public class PostController {
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
-    // 
+    //
     @GetMapping("/search")
     public ApiResponse<PageResponse<FeedPostResponse>> searchPosts(
             @RequestParam String keyword,
@@ -96,6 +96,18 @@ public class PostController {
 
         PostResponse response = postService.updatePost(id, request, files);
         return ApiResponse.success(response);
+    }
+
+    @GetMapping("/{id}/fact-check/preview")
+    public ApiResponse<PostFactCheckPreviewResponse> getFactCheckPreview(
+            @PathVariable UUID id) {
+        return ApiResponse.success(postFactCheckService.getFactCheckPreview(id));
+    }
+
+    @GetMapping("/{id}/fact-check/detail")
+    public ApiResponse<PostFactCheckDetailResponse> getFactCheckDetail(
+            @PathVariable UUID id) {
+        return ApiResponse.success(postFactCheckService.getFactCheckDetail(id));
     }
 
 }

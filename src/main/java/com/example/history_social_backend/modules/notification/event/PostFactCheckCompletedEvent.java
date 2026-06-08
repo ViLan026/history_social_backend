@@ -1,11 +1,23 @@
 package com.example.history_social_backend.modules.notification.event;
 
-import java.util.UUID;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.UUID;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 public class PostFactCheckCompletedEvent {
-    private UUID postId;
-    private UUID recipientId;
+
+    // UUID commentId;
+    UUID postId;
+    UUID actorId;
+    UUID recipientId;
+    String reason;
 }

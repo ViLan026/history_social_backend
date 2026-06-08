@@ -17,6 +17,7 @@ import com.example.history_social_backend.modules.post.domain.Post;
 import com.example.history_social_backend.modules.post.domain.PostStatus;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
+import com.example.history_social_backend.modules.post.repository.PostFactCheckClaimRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
 import com.example.history_social_backend.modules.report.dto.response.TargetPreviewResponse;
 import com.example.history_social_backend.modules.user.dto.response.UserReactionResponse;
@@ -36,6 +37,7 @@ public class PostQueryService {
     private final PostMapper postMapper;
     private final UserQueryService userQueryService;
     private final FeedRankingService feedRankingService;
+    private final PostFactCheckClaimRepository postFactCheckClaimRepository;
 
     public boolean existsById(UUID id) {
         return postRepository.existsById(id);
@@ -74,10 +76,18 @@ public class PostQueryService {
 
         Map<UUID, UserReactionResponse> userMap = userQueryService.getUserReactionInfoMap(authorIds);
 
+        Set<UUID> postIds = posts.getContent()
+                .stream()
+                .map(Post::getId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> postIdsHavingFactCheck = postFactCheckClaimRepository.findPostIdsHavingFactCheck(postIds);
+
         List<FeedPostResponse> rankedContent = posts.getContent()
                 .stream()
                 .map(post -> {
                     FeedPostResponse response = postMapper.toFeedPostResponse(post);
+                    enrichFactCheckFlag(response, postIdsHavingFactCheck);
 
                     UserReactionResponse authorSummary = userMap.get(post.getAuthorId());
 
@@ -109,8 +119,17 @@ public class PostQueryService {
         }
 
         UserReactionResponse authorSummary = userQueryService.getUserInfo(authorId);
+
+        Set<UUID> postIds = posts.getContent()
+                .stream()
+                .map(Post::getId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> postIdsHavingFactCheck = postFactCheckClaimRepository.findPostIdsHavingFactCheck(postIds);
+
         return posts.map(post -> {
             FeedPostResponse response = postMapper.toFeedPostResponse(post);
+            enrichFactCheckFlag(response, postIdsHavingFactCheck);
             response.setAuthor(authorSummary);
             return response;
         });
@@ -171,10 +190,18 @@ public class PostQueryService {
 
         Map<UUID, UserReactionResponse> userMap = userQueryService.getUserReactionInfoMap(authorIds);
 
+        Set<UUID> postIds = posts.getContent()
+                .stream()
+                .map(Post::getId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> postIdsHavingFactCheck = postFactCheckClaimRepository.findPostIdsHavingFactCheck(postIds);
+
         List<FeedPostResponse> rankedContent = posts.getContent()
                 .stream()
                 .map(post -> {
                     FeedPostResponse response = postMapper.toFeedPostResponse(post);
+                    enrichFactCheckFlag(response, postIdsHavingFactCheck);
 
                     response.setAuthor(userMap.get(post.getAuthorId()));
 
@@ -212,15 +239,6 @@ public class PostQueryService {
         postRepository.decrementReactionCount(postId);
     }
 
-    // @Transactional
-    // public void rejectPostByAdmin(UUID postId) {
-    // Post post = postRepository.findById(postId)
-    // .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
-
-    // post.setStatus(PostStatus.REJECTED);
-    // postRepository.save(post);
-    // }
-
     @Transactional
     public void updatePostStatusByAdmin(UUID postId, PostStatus status) {
         if (status != PostStatus.PUBLISHED
@@ -240,4 +258,9 @@ public class PostQueryService {
     public void rejectPostByAdmin(UUID postId) {
         updatePostStatusByAdmin(postId, PostStatus.REJECTED);
     }
+
+    private void enrichFactCheckFlag(FeedPostResponse response, Set<UUID> postIdsHavingFactCheck) {
+        response.setHasFactCheck(postIdsHavingFactCheck.contains(response.getPostId()));
+    }
+
 }

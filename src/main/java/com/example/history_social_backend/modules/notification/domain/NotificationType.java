@@ -9,5 +9,6 @@ public enum NotificationType {
     POST,
     REPORT,
     REPLY,
-    HSD
+    HSD,
+    FACT_CHECK, 
 }

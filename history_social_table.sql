@@ -221,10 +221,26 @@ CREATE TABLE notifications (
 	"content" text NULL,
 	"type" varchar(255) NOT NULL,
 	CONSTRAINT notifications_pkey PRIMARY KEY (id),
-	CONSTRAINT notifications_type_check CHECK (((type)::text = ANY ((ARRAY['LIKE'::character varying, 'COMMENT'::character varying, 'REACTION'::character varying, 'FOLLOW'::character varying, 'SYSTEM'::character varying, 'POST'::character varying, 'REPORT'::character varying, 'REPLY'::character varying, 'HSD'::character varying])::text[])))
+	CONSTRAINT notifications_type_check CHECK (((type)::text = ANY ((ARRAY['LIKE'::character varying, 'COMMENT'::character varying, 'REACTION'::character varying, 'FOLLOW'::character varying, 'SYSTEM'::character varying, 'POST'::character varying, 'REPORT'::character varying, 'REPLY'::character varying, 'HSD'::character varying, 'FACT_CHECK'::character varying])::text[])))
     CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE, 
     CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
 
+);
+
+
+
+CREATE TABLE notifications (
+	id uuid NOT NULL,
+	created_at timestamp(6) NOT NULL,
+	updated_at timestamp(6) NULL,
+	actor_id uuid NULL,
+	"content" text NULL,
+	is_read bool NOT NULL,
+	recipient_id uuid NOT NULL,
+	reference_id uuid NULL,
+	"type" varchar(255) NOT NULL,
+	CONSTRAINT notifications_pkey PRIMARY KEY (id),
+	
 );
 
 

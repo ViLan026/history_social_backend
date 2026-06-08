@@ -44,6 +44,7 @@ public interface PostMapper {
     @Mapping(source = "postTags", target = "tags")
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "rankingScore", ignore = true)
+    @Mapping(target = "hasFactCheck", ignore = true)
     FeedPostResponse toFeedPostResponse(Post post);
 
 }

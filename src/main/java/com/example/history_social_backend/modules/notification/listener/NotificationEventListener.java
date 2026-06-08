@@ -211,10 +211,12 @@ public class NotificationEventListener {
     @EventListener
     public void handle(PostFactCheckCompletedEvent event) {
 
-        notificationService.createSystemNotification(
+        notificationService.createNotification(
                 event.getRecipientId(),
-                event.getPostId(),
-                "Hệ thống đã hoàn tất kiểm chứng bài viết của bạn.");
+                event.getActorId(),
+                NotificationType.FACT_CHECK,
+                "Kết quả kiểm chứng bài viết đã được cập nhật.",
+                event.getPostId());
     }
 
 }

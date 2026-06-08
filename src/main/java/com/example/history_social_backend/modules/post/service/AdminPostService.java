@@ -2,6 +2,8 @@ package com.example.history_social_backend.modules.post.service;
 
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
+import com.example.history_social_backend.core.security.SecurityUtils;
+import com.example.history_social_backend.modules.notification.event.PostFactCheckCompletedEvent;
 import com.example.history_social_backend.modules.post.domain.FactCheckLabel;
 import com.example.history_social_backend.modules.post.domain.Post;
 import com.example.history_social_backend.modules.post.domain.PostFactCheckClaim;
@@ -16,6 +18,8 @@ import com.example.history_social_backend.modules.report.domain.ReportTargetType
 import com.example.history_social_backend.modules.report.repository.ReportRepository;
 import com.example.history_social_backend.modules.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,8 @@ public class AdminPostService {
     private final ReportRepository reportRepository;
     private final UserQueryService userQueryService;
     private final PostFactCheckService postFactCheckService;
+    private final ApplicationEventPublisher eventPublisher;
+    
 
     @Transactional(readOnly = true)
     public Page<AdminPostResponse> getPosts(PostStatus status, Pageable pageable) {
@@ -62,7 +68,7 @@ public class AdminPostService {
                 .bookmarkCount(post.getBookmarkCount())
                 .reportCount(getReportCount(post.getId()))
                 .factCheckClaims(claims)
-                .factCheckSummary(buildFactCheckSummary(claims))
+                .factCheckSummary(postFactCheckService.buildFactCheckSummary(claims))
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .deletedAt(post.getDeletedAt())
@@ -96,7 +102,7 @@ public class AdminPostService {
                 .reactionCount(post.getReactionCount())
                 .bookmarkCount(post.getBookmarkCount())
                 .reportCount(getReportCount(post.getId()))
-                .factCheckSummary(buildFactCheckSummary(claims))
+                .factCheckSummary(postFactCheckService.buildFactCheckSummary(claims))
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
@@ -117,26 +123,6 @@ public class AdminPostService {
                 .explanation(claim.getExplanation())
                 .evidence(claim.getEvidence())
                 .displayOrder(claim.getDisplayOrder())
-                .build();
-    }
-
-    private FactCheckSummaryResponse buildFactCheckSummary(List<PostFactCheckClaimResponse> claims) {
-        long supported = claims.stream()
-                .filter(c -> FactCheckLabel.SUPPORTED.name().equals(c.getLabel()))
-                .count();
-
-        long refuted = claims.stream()
-                .filter(c -> FactCheckLabel.REFUTED.name().equals(c.getLabel()))
-                .count();
-
-        long notEnough = claims.stream()
-                .filter(c -> FactCheckLabel.NOT_ENOUGH_EVIDENCE.name().equals(c.getLabel()))
-                .count();
-
-        return FactCheckSummaryResponse.builder()
-                .supportedCount(supported)
-                .refutedCount(refuted)
-                .notEnoughEvidenceCount(notEnough)
                 .build();
     }
 
@@ -167,8 +153,20 @@ public class AdminPostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
+        UUID adminId = SecurityUtils.getCurrentUserId();
+
         postFactCheckService.recheckPost(post);
+
+        eventPublisher.publishEvent(
+                PostFactCheckCompletedEvent.builder()
+                        .postId(post.getId())
+                        .recipientId(post.getAuthorId())
+                        .actorId(adminId)
+                        .build());
 
         return getPostDetail(post.getId());
     }
+
+
+    
 }

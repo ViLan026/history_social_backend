@@ -3,8 +3,6 @@ package com.example.history_social_backend.modules.post.service;
 import com.example.history_social_backend.core.exception.AppException;
 import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
-import com.example.history_social_backend.modules.ai.dto.response.AiFactCheckResponse;
-import com.example.history_social_backend.modules.ai.service.AiModerationService;
 import com.example.history_social_backend.modules.media.internal.UploadResult;
 import com.example.history_social_backend.modules.media.service.CloudinaryService;
 import com.example.history_social_backend.modules.post.domain.*;
@@ -50,7 +48,6 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostTagService tagService;
     private final ApplicationEventPublisher eventPublisher;
-    private final AiModerationService aiModerationService;
     private final PostFactCheckService postFactCheckService;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
@@ -85,10 +82,7 @@ public class PostService {
             throw e;
         }
 
-        AiFactCheckResponse factCheckResult = aiModerationService.factCheckPost(savedPost.getId(),
-                savedPost.getContent());
-
-        postFactCheckService.saveFactCheckClaims(savedPost, factCheckResult);
+        postFactCheckService.recheckPost(savedPost);
 
         eventPublisher.publishEvent(
                 PostStatusChangedEvent.builder()

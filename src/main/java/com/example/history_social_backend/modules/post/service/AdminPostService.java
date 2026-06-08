@@ -32,6 +32,7 @@ public class AdminPostService {
     private final PostFactCheckClaimRepository postFactCheckClaimRepository;
     private final ReportRepository reportRepository;
     private final UserQueryService userQueryService;
+    private final PostFactCheckService postFactCheckService;
 
     @Transactional(readOnly = true)
     public Page<AdminPostResponse> getPosts(PostStatus status, Pageable pageable) {
@@ -159,5 +160,15 @@ public class AdminPostService {
                 && status != PostStatus.REJECTED) {
             throw new AppException(ErrorCode.INVALID_POST_STATUS);
         }
+    }
+
+    @Transactional
+    public AdminPostDetailResponse recheckPostFactCheck(UUID postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        postFactCheckService.recheckPost(post);
+
+        return getPostDetail(post.getId());
     }
 }

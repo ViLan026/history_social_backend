@@ -4,6 +4,7 @@ import com.example.history_social_backend.modules.notification.domain.Notificati
 import com.example.history_social_backend.modules.notification.event.CommentCreatedEvent;
 import com.example.history_social_backend.modules.notification.event.CommentHiddenByHsdEvent;
 import com.example.history_social_backend.modules.notification.event.CommentRepliedEvent;
+import com.example.history_social_backend.modules.notification.event.PostFactCheckCompletedEvent;
 import com.example.history_social_backend.modules.notification.event.PostStatusChangedEvent;
 import com.example.history_social_backend.modules.notification.event.ReactionCreatedEvent;
 import com.example.history_social_backend.modules.notification.event.ReportCreatedEvent;
@@ -205,6 +206,15 @@ public class NotificationEventListener {
 
         log.info("Created HSD notification: recipient={}, comment={}",
                 event.getRecipientId(), event.getCommentId());
+    }
+
+    @EventListener
+    public void handle(PostFactCheckCompletedEvent event) {
+
+        notificationService.createSystemNotification(
+                event.getRecipientId(),
+                event.getPostId(),
+                "Hệ thống đã hoàn tất kiểm chứng bài viết của bạn.");
     }
 
 }

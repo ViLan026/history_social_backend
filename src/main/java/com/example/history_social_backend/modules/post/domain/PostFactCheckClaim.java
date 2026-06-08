@@ -49,3 +49,8 @@ public class PostFactCheckClaim extends BaseEntity {
     @Column(name = "display_order", nullable = false)
     Integer displayOrder;
 }
+
+
+
+
+

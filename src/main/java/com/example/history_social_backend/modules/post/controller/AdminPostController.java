@@ -27,8 +27,7 @@ public class AdminPostController {
     @GetMapping
     public ApiResponse<PageResponse<AdminPostResponse>> getPosts(
             @RequestParam(required = false) PostStatus status,
-            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
-    ) {
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         Page<AdminPostResponse> pageData = adminPostService.getPosts(status, pageable);
         return ApiResponse.success(PageResponse.from(pageData));
     }
@@ -41,10 +40,13 @@ public class AdminPostController {
     @PatchMapping("/{id}/status")
     public ApiResponse<AdminPostDetailResponse> updatePostStatus(
             @PathVariable UUID id,
-            @RequestBody @Valid AdminUpdatePostStatusRequest request
-    ) {
+            @RequestBody @Valid AdminUpdatePostStatusRequest request) {
         return ApiResponse.success(
-                adminPostService.updatePostStatus(id, request.getStatus())
-        );
+                adminPostService.updatePostStatus(id, request.getStatus()));
+    }
+
+    @PostMapping("/{id}/fact-check/recheck")
+    public ApiResponse<AdminPostDetailResponse> recheckPostFactCheck(@PathVariable UUID id) {
+        return ApiResponse.success(adminPostService.recheckPostFactCheck(id));
     }
 }

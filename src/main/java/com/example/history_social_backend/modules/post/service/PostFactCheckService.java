@@ -2,6 +2,7 @@ package com.example.history_social_backend.modules.post.service;
 
 import com.example.history_social_backend.modules.ai.dto.response.AiClaimResponse;
 import com.example.history_social_backend.modules.ai.dto.response.AiFactCheckResponse;
+import com.example.history_social_backend.modules.ai.service.AiModerationService;
 import com.example.history_social_backend.modules.post.domain.FactCheckLabel;
 import com.example.history_social_backend.modules.post.domain.Post;
 import com.example.history_social_backend.modules.post.domain.PostFactCheckClaim;
@@ -17,6 +18,16 @@ import java.util.List;
 public class PostFactCheckService {
 
     private final PostFactCheckClaimRepository postFactCheckClaimRepository;
+    private final AiModerationService aiModerationService;
+
+    @Transactional
+    public void recheckPost(Post post) {
+        AiFactCheckResponse response = aiModerationService.factCheckPost(
+                post.getId(),
+                post.getContent());
+
+        saveFactCheckClaims(post, response);
+    }
 
     @Transactional
     public void saveFactCheckClaims(Post post, AiFactCheckResponse response) {
@@ -52,4 +63,5 @@ public class PostFactCheckService {
             return FactCheckLabel.NOT_ENOUGH_EVIDENCE;
         }
     }
+
 }

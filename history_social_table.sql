@@ -106,7 +106,7 @@ CREATE INDEX idx_post_created ON public.posts USING btree (id);
 CREATE INDEX idx_post_status ON public.posts USING btree (status);
 
 
-
+	
 CREATE TABLE tags (
 	usage_count int4 NULL,
 	created_at timestamp(6) NOT NULL,
@@ -190,6 +190,7 @@ CREATE TABLE bookmarks (
 );
 
 
+
 CREATE TABLE "comments" (
 	created_at timestamp(6) NOT NULL,
 	deleted_at timestamp(6) NULL,
@@ -199,10 +200,12 @@ CREATE TABLE "comments" (
 	parent_id uuid NULL,
 	post_id uuid NOT NULL,
 	"content" text NOT NULL,
+	hidden_reason text NULL,
+	is_visible bool DEFAULT true NOT NULL,
 	CONSTRAINT comments_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE, 
-    CONSTRAINT fk_comments_author FOREIGN KEY (author_id) REFERENCES users(id), 
-    CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+	CONSTRAINT fk_comments_author FOREIGN KEY (author_id) REFERENCES users(id),
+	CONSTRAINT fk_comments_parent FOREIGN KEY (parent_id) REFERENCES "comments"(id) ON DELETE CASCADE,
+	CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
 
 
@@ -218,7 +221,7 @@ CREATE TABLE notifications (
 	"content" text NULL,
 	"type" varchar(255) NOT NULL,
 	CONSTRAINT notifications_pkey PRIMARY KEY (id),
-	CONSTRAINT notifications_type_check CHECK (((type)::text = ANY ((ARRAY['LIKE'::character varying, 'COMMENT'::character varying, 'FOLLOW'::character varying, 'SYSTEM'::character varying])::text[]))),
+	CONSTRAINT notifications_type_check CHECK (((type)::text = ANY ((ARRAY['LIKE'::character varying, 'COMMENT'::character varying, 'REACTION'::character varying, 'FOLLOW'::character varying, 'SYSTEM'::character varying, 'POST'::character varying, 'REPORT'::character varying, 'REPLY'::character varying, 'HSD'::character varying])::text[])))
     CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE, 
     CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
 
@@ -249,6 +252,7 @@ CREATE TABLE reactions (
 	CONSTRAINT reactions_pkey PRIMARY KEY (id),
 	CONSTRAINT reactions_type_check CHECK (((type)::text = ANY ((ARRAY['INFORMATIVE'::character varying, 'SURPRISED'::character varying, 'SAD'::character varying, 'LIKE'::character varying, 'LOVE'::character varying, 'ANGRY'::character varying])::text[]))),
 	CONSTRAINT reactions_post_id_user_id_key UNIQUE (post_id, user_id),
+	CONSTRAINT ukaeq6cssia730m2nihyav05ui1 UNIQUE (post_id, user_id),
     CONSTRAINT fk_reactions_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     CONSTRAINT fk_reactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -268,11 +272,44 @@ CREATE TABLE reports (
 	status varchar(30) NOT NULL,
 	target_id uuid NOT NULL,
 	target_type varchar(30) NOT NULL,
+	admin_note text NULL,
+	report_type varchar(255) DEFAULT 'REPORT'::character varying NOT NULL,
 	CONSTRAINT reports_pkey PRIMARY KEY (id),
 	CONSTRAINT reports_reason_type_check CHECK (((reason_type)::text = ANY ((ARRAY['MISINFORMATION'::character varying, 'FAKE_HISTORY'::character varying, 'HATE_SPEECH'::character varying, 'VIOLENCE'::character varying, 'HARASSMENT'::character varying, 'SPAM'::character varying, 'INAPPROPRIATE'::character varying, 'OTHER'::character varying])::text[]))),
 	CONSTRAINT reports_status_check CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'RESOLVED'::character varying, 'DISMISSED'::character varying])::text[]))),
 	CONSTRAINT reports_target_type_check CHECK (((target_type)::text = ANY ((ARRAY['POST'::character varying, 'COMMENT'::character varying])::text[]))),
+	CONSTRAINT reports_report_type_check CHECK (((report_type)::text = ANY ((ARRAY['REPORT'::character varying, 'APPEAL'::character varying])::text[]))),
     CONSTRAINT fk_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(id), 
     CONSTRAINT fk_reports_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id)
 );
 
+
+
+CREATE TABLE post_fact_check_claims (
+	id uuid NOT NULL,
+	post_id uuid NOT NULL,
+	claim_text text NOT NULL,
+	"label" varchar(30) NOT NULL,
+	explanation text NULL,
+	evidence jsonb NULL,
+	display_order int4 NOT NULL,
+	created_at timestamp(6) NOT NULL,
+	updated_at timestamp(6) NULL,
+	CONSTRAINT post_fact_check_claims_label_check CHECK (((label)::text = ANY ((ARRAY['SUPPORTED'::character varying, 'REFUTED'::character varying, 'NOT_ENOUGH_EVIDENCE'::character varying])::text[]))),
+	CONSTRAINT post_fact_check_claims_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_post_fact_check_claims_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE comment_hate_speech_results (
+	id uuid NOT NULL,
+	comment_id uuid NOT NULL,
+	"label" varchar(30) NOT NULL,
+	score float8 NULL,
+	raw_result jsonb NULL,
+	created_at timestamp(6) NOT NULL,
+	updated_at timestamp(6) NULL,
+	CONSTRAINT comment_hate_speech_results_label_check CHECK (((label)::text = ANY ((ARRAY['HATE'::character varying, 'CLEAN'::character varying])::text[]))),
+	CONSTRAINT comment_hate_speech_results_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_comment_hate_speech_results_comment FOREIGN KEY (comment_id) REFERENCES "comments"(id) ON DELETE CASCADE
+);

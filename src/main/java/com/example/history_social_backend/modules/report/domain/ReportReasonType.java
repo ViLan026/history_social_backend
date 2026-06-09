@@ -10,3 +10,14 @@ public enum ReportReasonType {
     INAPPROPRIATE,    // Nội dung không phù hợp
     OTHER             // Khác
 }
+
+
+
+
+
+
+
+
+
+
+

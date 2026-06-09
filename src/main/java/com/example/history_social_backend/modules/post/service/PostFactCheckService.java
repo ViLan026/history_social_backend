@@ -32,6 +32,14 @@ public class PostFactCheckService {
     private final PostRepository postRepository;
 
     @Transactional
+    public void recheckPostById(UUID postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        recheckPost(post);
+    }
+
+    @Transactional
     public void recheckPost(Post post) {
         AiFactCheckResponse response = aiModerationService.factCheckPost(
                 post.getId(),

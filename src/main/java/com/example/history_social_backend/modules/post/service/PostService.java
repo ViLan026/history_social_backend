@@ -34,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
+import com.example.history_social_backend.modules.notification.event.PostCreatedForFactCheckEvent;
 import com.example.history_social_backend.modules.notification.event.PostStatusChangedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -82,7 +84,11 @@ public class PostService {
             throw e;
         }
 
-        postFactCheckService.recheckPost(savedPost);
+        eventPublisher.publishEvent(
+                PostCreatedForFactCheckEvent.builder()
+                        .postId(savedPost.getId())
+                        .authorId(savedPost.getAuthorId())
+                        .build());
 
         eventPublisher.publishEvent(
                 PostStatusChangedEvent.builder()

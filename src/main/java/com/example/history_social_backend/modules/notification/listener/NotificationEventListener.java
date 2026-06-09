@@ -94,7 +94,7 @@ public class NotificationEventListener {
                     event.getRecipientId(),
                     event.getActorId(),
                     NotificationType.POST,
-                    "Bài viết của bạn đã được duyệt và hiển thị công khai",
+                    "Bài viết của bạn đã được hiển thị công khai",
                     event.getPostId());
         }
 

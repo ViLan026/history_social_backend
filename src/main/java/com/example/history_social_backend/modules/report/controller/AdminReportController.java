@@ -48,4 +48,4 @@ public class AdminReportController {
         ReportResponse response = reportService.reviewReport(id, request);
         return ApiResponse.success("Đã xét duyệt báo cáo thành công", response);
     }
-}
+} 

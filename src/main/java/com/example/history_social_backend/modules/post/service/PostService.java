@@ -8,10 +8,14 @@ import com.example.history_social_backend.modules.media.service.CloudinaryServic
 import com.example.history_social_backend.modules.post.domain.*;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
+import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
+import com.example.history_social_backend.modules.post.dto.response.UpdatePostStatusResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostMediaRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
+import com.example.history_social_backend.modules.user.service.UserQueryService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +54,7 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostTagService tagService;
     private final ApplicationEventPublisher eventPublisher;
-    private final PostFactCheckService postFactCheckService;
+    private final UserQueryService userQueryService;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
     private final ExecutorService uploadExecutor = Executors.newFixedThreadPool(10);
@@ -399,4 +403,52 @@ public class PostService {
         return "history_social/" + "posts/" + userId.toString();
     }
 
+    @Transactional
+    public UpdatePostStatusResponse updateMyPostStatus(
+            UUID postId,
+            PostStatus newStatus) {
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getAuthorId().equals(currentUserId)) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        PostStatus currentStatus = post.getStatus();
+
+        if (!isValidUserStatusTransition(currentStatus, newStatus)) {
+            throw new AppException(ErrorCode.INVALID_POST_STATUS_TRANSITION);
+        }
+
+        post.setStatus(newStatus);
+
+        Post savedPost = postRepository.save(post);
+
+        return UpdatePostStatusResponse.builder()
+                .postId(savedPost.getId())
+                .status(savedPost.getStatus())
+                .build();
+    }
+
+    private boolean isValidUserStatusTransition(
+            PostStatus currentStatus,
+            PostStatus newStatus) {
+
+        return switch (currentStatus) {
+
+            case DRAFT ->
+                newStatus == PostStatus.PUBLISHED;
+
+            case PUBLISHED ->
+                newStatus == PostStatus.HIDDEN;
+
+            case HIDDEN ->
+                newStatus == PostStatus.PUBLISHED;
+
+            default -> false;
+        };
+    }
 }

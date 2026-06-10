@@ -61,6 +61,7 @@ public enum ErrorCode {
 
     TAG_NOT_FOUND(3007, "Tag không tồn tại", HttpStatus.NOT_FOUND),
     INVALID_POST_STATUS(3008, "Trạng thái bài viết không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_POST_STATUS_TRANSITION(400, "Không thể chuyển bài viết sang trạng thái này", HttpStatus.BAD_REQUEST),
 
     // Modules.Comment
     COMMENT_NOT_FOUND(4001, "Không tìm thấy bình luận", HttpStatus.NOT_FOUND),

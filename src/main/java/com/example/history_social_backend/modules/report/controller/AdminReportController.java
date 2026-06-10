@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.history_social_backend.common.constant.ApiPaths;
 import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
+import com.example.history_social_backend.modules.report.domain.ReportStatus;
 import com.example.history_social_backend.modules.report.domain.ReportTargetType;
 import com.example.history_social_backend.modules.report.dto.request.ReviewReportRequest;
 import com.example.history_social_backend.modules.report.dto.response.ModerationReportResponse;
@@ -31,12 +32,13 @@ public class AdminReportController {
 
     private final ReportService reportService;
 
-    @GetMapping("/pending")
-    public ApiResponse<PageResponse<ModerationReportResponse>> getPendingReports(
+    @GetMapping
+    public ApiResponse<PageResponse<ModerationReportResponse>> getAdminReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) ReportStatus status,
             @RequestParam(required = false) ReportTargetType targetType) {
-        PageResponse<ModerationReportResponse> response = reportService.getPendingReports(page, size, targetType);
+        PageResponse<ModerationReportResponse> response = reportService.getAdminReports(page, size,status, targetType);
 
         return ApiResponse.success(response);
     }

@@ -5,10 +5,12 @@ import com.example.history_social_backend.common.response.ApiResponse;
 import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
+import com.example.history_social_backend.modules.post.dto.request.UpdateMyPostStatusRequest;
 import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostFactCheckDetailResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostFactCheckPreviewResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
+import com.example.history_social_backend.modules.post.dto.response.UpdatePostStatusResponse;
 import com.example.history_social_backend.modules.post.service.PostFactCheckService;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.post.service.PostService;
@@ -78,6 +80,14 @@ public class PostController {
         return ApiResponse.success(PageResponse.from(pageData));
     }
 
+    @GetMapping("/me")
+    public ApiResponse<PageResponse<FeedPostResponse>> getMyPosts(
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<FeedPostResponse> pageData = postQueryService.getMyPosts(pageable);
+        return ApiResponse.success(PageResponse.from(pageData));
+    }
+
     //
     @GetMapping("/search")
     public ApiResponse<PageResponse<FeedPostResponse>> searchPosts(
@@ -95,6 +105,18 @@ public class PostController {
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
         PostResponse response = postService.updatePost(id, request, files);
+        return ApiResponse.success(response);
+    }
+
+    @PatchMapping("/{postId}/status")
+    public ApiResponse<UpdatePostStatusResponse> updateMyPostStatus(
+            @PathVariable UUID postId,
+            @Valid @RequestBody UpdateMyPostStatusRequest request) {
+
+        UpdatePostStatusResponse response = postService.updateMyPostStatus(
+                postId,
+                request.getStatus());
+
         return ApiResponse.success(response);
     }
 

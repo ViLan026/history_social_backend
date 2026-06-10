@@ -224,6 +224,41 @@ public class PostQueryService {
                 posts.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
+    public Page<FeedPostResponse> getMyPosts(Pageable pageable) {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        Page<Post> posts = postRepository.findByAuthorIdAndStatusIn(
+                currentUserId,
+                List.of(
+                        PostStatus.DRAFT,
+                        PostStatus.PUBLISHED,
+                        PostStatus.HIDDEN,
+                        PostStatus.FLAGGED,
+                        PostStatus.REJECTED),
+                pageable);
+
+        if (posts.isEmpty()) {
+            return posts.map(postMapper::toFeedPostResponse);
+        }
+
+        UserReactionResponse authorSummary = userQueryService.getUserInfo(currentUserId);
+
+        Set<UUID> postIds = posts.getContent()
+                .stream()
+                .map(Post::getId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> postIdsHavingFactCheck = postFactCheckClaimRepository.findPostIdsHavingFactCheck(postIds);
+
+        return posts.map(post -> {
+            FeedPostResponse response = postMapper.toFeedPostResponse(post);
+            enrichFactCheckFlag(response, postIdsHavingFactCheck);
+            response.setAuthor(authorSummary);
+            return response;
+        });
+    }
+
     @Transactional
     public void increaseCommentCount(UUID postId) {
         postRepository.incrementCommentCount(postId);

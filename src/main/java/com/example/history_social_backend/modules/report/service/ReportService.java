@@ -92,107 +92,6 @@ public class ReportService {
         return PageResponse.from(responsePage);
     }
 
-    @Transactional(readOnly = true)
-    public PageResponse<ModerationReportResponse> getPendingReports(
-            int page,
-            int size,
-            ReportTargetType targetType) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-
-        Page<Report> reports;
-
-        if (targetType == null) {
-            reports = reportRepository.findByStatus(ReportStatus.PENDING, pageable);
-        } else {
-            reports = reportRepository.findByStatusAndTargetType(
-                    ReportStatus.PENDING,
-                    targetType,
-                    pageable);
-        }
-
-        Page<ModerationReportResponse> responsePage = reports.map(this::buildModerationResponse);
-
-        return PageResponse.from(responsePage);
-    }
-
-    @Transactional
-    public ReportResponse reviewReport(UUID reportId, ReviewReportRequest request) {
-        UUID adminUserId = SecurityUtils.getCurrentUserId();
-
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
-
-        if (report.getStatus() != ReportStatus.PENDING) {
-            throw new AppException(ErrorCode.REPORT_ALREADY_REVIEWED);
-        }
-
-        if (request.getStatus() == ReportStatus.RESOLVED) {
-            handleConfirmedViolation(report);
-        }
-
-        report.setStatus(request.getStatus());
-        report.setReviewedBy(adminUserId);
-        report.setReviewedAt(LocalDateTime.now());
-
-        Report updatedReport = reportRepository.save(report);
-
-        return reportMapper.toReportResponse(updatedReport);
-    }
-
-    private void handleConfirmedViolation(Report report) {
-        switch (report.getTargetType()) {
-            case POST -> postQueryService.rejectPostByAdmin(report.getTargetId());
-            case COMMENT -> commentService.deleteCommentByAdmin(report.getTargetId());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public long getReportCount(ReportTargetType targetType, UUID targetId) {
-        return reportRepository.countByTargetTypeAndTargetId(targetType, targetId);
-    }
-
-    private void validateTargetExists(ReportTargetType targetType, UUID targetId) {
-        switch (targetType) {
-            case POST -> {
-                if (!postQueryService.existsById(targetId)) {
-                    throw new AppException(ErrorCode.POST_NOT_FOUND);
-                }
-            }
-            case COMMENT -> {
-                if (!commentService.existsById(targetId)) {
-                    throw new AppException(ErrorCode.COMMENT_NOT_FOUND);
-                }
-            }
-        }
-    }
-
-    private ModerationReportResponse buildModerationResponse(Report report) {
-        ReportResponse reportResponse = reportMapper.toReportResponse(report);
-        TargetPreviewResponse targetPreview = buildTargetPreview(report.getTargetType(), report.getTargetId());
-
-        return ModerationReportResponse.builder()
-                .report(reportResponse)
-                .targetPreview(targetPreview)
-                .build();
-    }
-
-    private TargetPreviewResponse buildTargetPreview(ReportTargetType targetType, UUID targetId) {
-        switch (targetType) {
-            case POST -> {
-                return postQueryService.getPostPreviewForModeration(targetId);
-            }
-            case COMMENT -> {
-                return commentService.getCommentPreviewForModeration(targetId);
-            }
-            default -> {
-                return TargetPreviewResponse.builder()
-                        .id(targetId)
-                        .content("Unknown target type")
-                        .build();
-            }
-        }
-    }
-
     private MyReportResponse buildMyReportResponse(Report report, UUID currentUserId) {
         // Kiểm tra xem đây có phải báo cáo về nội dung của user không
         boolean isMyContentReported = false;
@@ -273,4 +172,117 @@ public class ReportService {
                 .isMyContentReported(isMyContentReported)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ModerationReportResponse> getAdminReports(
+            int page,
+            int size,
+            ReportStatus status,
+            ReportTargetType targetType) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending());
+
+        Page<Report> reports;
+
+        if (status != null && targetType != null) {
+            reports = reportRepository.findByStatusAndTargetType(status, targetType, pageable);
+        } else if (status != null) {
+            reports = reportRepository.findByStatus(status, pageable);
+        } else if (targetType != null) {
+            reports = reportRepository.findByTargetType(targetType, pageable);
+        } else {
+            reports = reportRepository.findAll(pageable);
+        }
+
+        Page<ModerationReportResponse> responsePage = reports.map(this::buildModerationResponse);
+
+        return PageResponse.from(responsePage);
+    }
+
+    @Transactional
+    public ReportResponse reviewReport(UUID reportId, ReviewReportRequest request) {
+        UUID adminUserId = SecurityUtils.getCurrentUserId();
+
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
+
+        ReportStatus oldStatus = report.getStatus();
+        ReportStatus newStatus = request.getStatus();
+
+        report.setStatus(newStatus);
+        report.setReviewedBy(adminUserId);
+        report.setReviewedAt(LocalDateTime.now());
+
+        if (newStatus == ReportStatus.RESOLVED && oldStatus != ReportStatus.RESOLVED) {
+            handleConfirmedViolation(report);
+        }
+
+        Report updatedReport = reportRepository.save(report);
+
+        log.info(
+                "Admin {} changed report {} status from {} to {}",
+                adminUserId,
+                reportId,
+                oldStatus,
+                newStatus);
+
+        return reportMapper.toReportResponse(updatedReport);
+    }
+
+    private void handleConfirmedViolation(Report report) {
+        switch (report.getTargetType()) {
+            case POST -> postQueryService.rejectPostByAdmin(report.getTargetId());
+            case COMMENT -> commentService.deleteCommentByAdmin(report.getTargetId());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public long getReportCount(ReportTargetType targetType, UUID targetId) {
+        return reportRepository.countByTargetTypeAndTargetId(targetType, targetId);
+    }
+
+    private void validateTargetExists(ReportTargetType targetType, UUID targetId) {
+        switch (targetType) {
+            case POST -> {
+                if (!postQueryService.existsById(targetId)) {
+                    throw new AppException(ErrorCode.POST_NOT_FOUND);
+                }
+            }
+            case COMMENT -> {
+                if (!commentService.existsById(targetId)) {
+                    throw new AppException(ErrorCode.COMMENT_NOT_FOUND);
+                }
+            }
+        }
+    }
+
+    private ModerationReportResponse buildModerationResponse(Report report) {
+        ReportResponse reportResponse = reportMapper.toReportResponse(report);
+        TargetPreviewResponse targetPreview = buildTargetPreview(report.getTargetType(), report.getTargetId());
+
+        return ModerationReportResponse.builder()
+                .report(reportResponse)
+                .targetPreview(targetPreview)
+                .build();
+    }
+
+    private TargetPreviewResponse buildTargetPreview(ReportTargetType targetType, UUID targetId) {
+        switch (targetType) {
+            case POST -> {
+                return postQueryService.getPostPreviewForModeration(targetId);
+            }
+            case COMMENT -> {
+                return commentService.getCommentPreviewForModeration(targetId);
+            }
+            default -> {
+                return TargetPreviewResponse.builder()
+                        .id(targetId)
+                        .content("Unknown target type")
+                        .build();
+            }
+        }
+    }
+
 }

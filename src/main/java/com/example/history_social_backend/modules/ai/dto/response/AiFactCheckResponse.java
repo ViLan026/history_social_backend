@@ -13,6 +13,6 @@ import java.util.UUID;
 public class AiFactCheckResponse {
     private UUID postId;
     // private Double qualityScore;
-    private String postLabel;
+    // private String postLabel;
     private List<AiClaimResponse> claims;
 }

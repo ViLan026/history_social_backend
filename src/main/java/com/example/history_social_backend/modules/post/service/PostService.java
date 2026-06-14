@@ -8,13 +8,11 @@ import com.example.history_social_backend.modules.media.service.CloudinaryServic
 import com.example.history_social_backend.modules.post.domain.*;
 import com.example.history_social_backend.modules.post.dto.request.PostCreationRequest;
 import com.example.history_social_backend.modules.post.dto.request.PostUpdateRequest;
-import com.example.history_social_backend.modules.post.dto.response.FeedPostResponse;
 import com.example.history_social_backend.modules.post.dto.response.PostResponse;
 import com.example.history_social_backend.modules.post.dto.response.UpdatePostStatusResponse;
 import com.example.history_social_backend.modules.post.mapper.PostMapper;
 import com.example.history_social_backend.modules.post.repository.PostMediaRepository;
 import com.example.history_social_backend.modules.post.repository.PostRepository;
-import com.example.history_social_backend.modules.user.service.UserQueryService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +52,6 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostTagService tagService;
     private final ApplicationEventPublisher eventPublisher;
-    private final UserQueryService userQueryService;
 
     // Thread pool riêng cho upload (max 10 concurrent uploads)
     private final ExecutorService uploadExecutor = Executors.newFixedThreadPool(10);

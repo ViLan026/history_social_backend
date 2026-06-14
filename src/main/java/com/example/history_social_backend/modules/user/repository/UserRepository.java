@@ -12,12 +12,10 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import org.springframework.stereotype.Repository;
 
 import com.example.history_social_backend.modules.user.domain.AccountStatus;
 import com.example.history_social_backend.modules.user.domain.User;
 
-@Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);

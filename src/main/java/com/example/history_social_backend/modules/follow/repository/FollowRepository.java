@@ -12,8 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.history_social_backend.modules.follow.domain.Follow;
 
-public interface FollowRepository
-        extends JpaRepository<Follow, UUID> {
+public interface FollowRepository  extends JpaRepository<Follow, UUID> {
 
     boolean existsByFollowerIdAndFollowingId(
             UUID followerId,

@@ -204,7 +204,8 @@ Main data groups include:
 - Historical fact-checking claims
 - Hate-speech detection results
 - On-this-day historical events
-  database: https://dbdiagram.io/d/PastConnext-69c8c223fb2db18e3b2acae3
+
+database: https://dbdiagram.io/d/PastConnext-69c8c223fb2db18e3b2acae3
 
 ## AI Integration Flow
 

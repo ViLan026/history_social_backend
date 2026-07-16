@@ -37,3 +37,7 @@ logs/
 
 
 src/main/resources/application-secret.yaml
+
+.env 
+
+.env.backend

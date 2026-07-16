@@ -1,6 +1,9 @@
 package com.example.history_social_backend.core.configuration;
 
 import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +54,9 @@ public class SecurityConfig {
     @Autowired
     private CustomJwtDecoder customJwtDecoder; // decode và validate JWT
 
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -82,15 +88,22 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        // corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .toList();
+
+        corsConfiguration.setAllowedOrigins(origins);
+
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        // corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization",
-        // "Content-Type", "X-Auth-Token"));
+
         corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
-        // corsConfiguration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type",
-        // "Accept", "Authorization"));
+
         corsConfiguration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
-        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setAllowCredentials(true);   // sử dụng cookie để lưu token
+        corsConfiguration.setMaxAge(3600L);
+
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);

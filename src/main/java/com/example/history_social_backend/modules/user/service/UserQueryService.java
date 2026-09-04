@@ -69,7 +69,7 @@ public class UserQueryService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
     }
 
     public User findById(UUID id) {

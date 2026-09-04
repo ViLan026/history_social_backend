@@ -22,7 +22,7 @@ public class ApiResponse<T> {
     T data;
     LocalDateTime timestamp;
 
-    // ================= SUCCESS =================
+    // SUCCESS
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()

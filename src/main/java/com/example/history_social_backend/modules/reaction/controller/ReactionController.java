@@ -8,6 +8,8 @@ import com.example.history_social_backend.modules.reaction.dto.request.ReactionR
 import com.example.history_social_backend.modules.reaction.dto.response.ReactionDetailResponse;
 import com.example.history_social_backend.modules.reaction.dto.response.ReactionStatsResponse;
 import com.example.history_social_backend.modules.reaction.service.ReactionService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,7 @@ public class ReactionController {
 
     // bật, tắt, thay đổi reaction
     @PostMapping
-    public ApiResponse<ReactionType> toggleReaction(@RequestBody ReactionRequest request) {
+    public ApiResponse<ReactionType> toggleReaction(@Valid @RequestBody ReactionRequest request) {
 
         return ApiResponse.success("Reaction toggled successfully", reactionService.toggleReaction(request));
     }

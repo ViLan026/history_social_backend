@@ -6,6 +6,8 @@ import com.example.history_social_backend.common.response.PageResponse;
 import com.example.history_social_backend.modules.comment.dto.CommentRequest;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import com.example.history_social_backend.modules.comment.service.CommentService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +21,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public ApiResponse<CommentResponse> createComment(@RequestBody CommentRequest request) {
+    public ApiResponse<CommentResponse> createComment(@Valid @RequestBody CommentRequest request) {
         return ApiResponse.success(commentService.createComment(request));
     }
 

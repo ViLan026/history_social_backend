@@ -29,7 +29,7 @@ public class OnThisDayService {
     public List<OnThisDayResponse> getTodayEvents() {
         LocalDate now = LocalDate.now();
         System.out.print("Thời gian là:  ");
-        System.out.println(now);
+        // System.out.println(now);
         int month = now.getMonthValue();
         int day = now.getDayOfMonth();
 

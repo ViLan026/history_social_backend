@@ -61,7 +61,7 @@ public class JwtService {
         long duration = isRefresh ? REFRESH_DURATION : ACCESS_DURATION;
 
         JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())
+                .subject(user.getEmail().trim())
                 .issueTime(Date.from(now))
                 .expirationTime(Date.from(now.plus(duration, ChronoUnit.SECONDS)))
                 .jwtID(UUID.randomUUID().toString());
@@ -125,7 +125,7 @@ public class JwtService {
 
         String type = (String) jwt.getJWTClaimsSet().getClaim("type");
 
-        // nếu nó là token chứ không phải refesh thì báo lỗi 
+        // nếu nó là token chứ không phải refesh thì báo lỗi
         if (!"refresh".equals(type))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
@@ -135,6 +135,12 @@ public class JwtService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         return jwt;
+    }
+
+    public SignedJWT verifySignature(String token)
+            throws JOSEException, ParseException {
+
+        return parseAndVerify(token);
     }
 
     private SignedJWT parseAndVerify(String token) {

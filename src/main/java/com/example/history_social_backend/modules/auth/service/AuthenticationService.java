@@ -41,8 +41,7 @@ public class AuthenticationService {
 
     @Transactional
     public UserResponse register(UserCreationRequest request) {
-        // 1. Thực hiện các logic nghiệp vụ riêng của luồng Đăng ký (Auth)
-        // Ví dụ:
+        // các logic nghiệp vụ riêng của luồng Đăng ký (Auth)
         // - Kiểm tra Google reCAPTCHA
         // - Ghi log hành vi đăng ký
         // - Xử lý format lại dữ liệu đầu vào trước khi lưu...
@@ -50,8 +49,7 @@ public class AuthenticationService {
         // 2. Gọi UserService để thực hiện việc tạo và lưu User vào Database
         UserResponse newUser = userService.createUser(request);
 
-        // 3. Xử lý các logic sau khi tạo thành công
-        // Ví dụ:
+        // các logic sau khi tạo thành công
         // - Bắn Event để gửi email kích hoạt tài khoản
         // - Khởi tạo các dữ liệu mặc định khác cho user mới...
 
@@ -60,6 +58,9 @@ public class AuthenticationService {
 
     public TokenPair login(AuthenticationRequest request) {
         User user = userQueryService.findByEmail(request.getEmail());
+
+        // System.out.println("LOGIN PASSWORD = [" + request.getPassword() + "]");
+        // System.out.println("LOGIN LENGTH = " + request.getPassword().length());
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -103,19 +104,19 @@ public class AuthenticationService {
 
     // // hàm kiểm tra token có hợp lệ, chưa bị thu hồi hay chưa hết hạn
     // public IntrospectResponse introspect(IntrospectRequest request) {
-    //     String token = request.getToken();
+    // String token = request.getToken();
 
-    //     try {
-    //         jwtService.verifyAccessToken(token);
-    //         return IntrospectResponse.builder()
-    //                 .valid(true)
-    //                 .build();
+    // try {
+    // jwtService.verifyAccessToken(token);
+    // return IntrospectResponse.builder()
+    // .valid(true)
+    // .build();
 
-    //     } catch (AppException | JOSEException | ParseException e) {
-    //         return IntrospectResponse.builder()
-    //                 .valid(false)
-    //                 .build();
-    //     }
+    // } catch (AppException | JOSEException | ParseException e) {
+    // return IntrospectResponse.builder()
+    // .valid(false)
+    // .build();
+    // }
     // }
 
     public TokenPair refresh(String refreshToken) {
@@ -168,6 +169,7 @@ public class AuthenticationService {
 
         try {
             SignedJWT jwt = jwtService.verifyRefreshToken(refreshToken);
+
             String jti = jwt.getJWTClaimsSet().getJWTID();
 
             RefreshToken stored = refreshTokenRepository.findById(jti)
@@ -177,8 +179,10 @@ public class AuthenticationService {
                 stored.setRevoked(true);
                 refreshTokenRepository.save(stored);
             }
-        } catch (JOSEException | ParseException e) {
-            // Logout vẫn nên thành công ở phía client; chỉ ghi log nếu cần
+
+        } catch (AppException | JOSEException | ParseException e) {
+            //
         }
     }
+
 }

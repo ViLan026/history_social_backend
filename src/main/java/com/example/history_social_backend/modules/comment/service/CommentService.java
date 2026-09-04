@@ -238,6 +238,9 @@ public class CommentService {
 
     @Transactional
     public String deleteComment(UUID commentId) {
+
+        UUID authorId = SecurityUtils.getCurrentUserId();
+        
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
@@ -245,7 +248,7 @@ public class CommentService {
             throw new AppException(ErrorCode.COMMENT_ALREADY_DELETED);
         }
 
-        UUID authorId = SecurityUtils.getCurrentUserId();
+        
 
         boolean isAuthor = comment.getAuthorId().equals(authorId);
         boolean isAdmin = isCurrentUserAdmin();

@@ -19,7 +19,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostCreationRequest {
 
-    @NotBlank(message = "Tiêu đề không được để trống")
+    // @NotBlank(message = "Tiêu đề không được để trống")
     @Size(max = 500, message = "Tiêu đề tối đa 500 ký tự")
     String title;
 

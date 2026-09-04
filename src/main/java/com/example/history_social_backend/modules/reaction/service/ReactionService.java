@@ -1,6 +1,8 @@
 package com.example.history_social_backend.modules.reaction.service;
 
 import com.example.history_social_backend.common.response.PageResponse;
+import com.example.history_social_backend.core.exception.AppException;
+import com.example.history_social_backend.core.exception.ErrorCode;
 import com.example.history_social_backend.core.security.SecurityUtils;
 import com.example.history_social_backend.modules.post.service.PostQueryService;
 import com.example.history_social_backend.modules.reaction.domain.Reaction;
@@ -96,6 +98,10 @@ public class ReactionService {
 
     @Transactional(readOnly = true)
     public ReactionStatsResponse getReactionStats(UUID postId) {
+        if (!postQueryService.existsById(postId)) {
+            throw new AppException(ErrorCode.POST_NOT_FOUND);
+        }
+
         List<ReactionCount> counts = reactionRepository.getReactionStats(postId);
 
         long totalReactions = counts.stream()

@@ -5,11 +5,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -18,7 +20,7 @@ import java.util.*;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    // Lỗi do t định nghĩa trong lúc code (không phải lỗi framework tự ném ra)
+    // Lỗi tự định nghĩa trong lúc code (không phải lỗi framework tự ném ra)
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(
             AppException exception,
@@ -134,6 +136,36 @@ public class GlobalExceptionHandler {
                         List.of(exception.getMessage())));
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request) {
+
+        log.warn(
+                "Argument type mismatch at [{}]: parameter={}, value={}",
+                request.getRequestURI(),
+                exception.getName(),
+                exception.getValue());
+
+        return ResponseEntity
+                .badRequest()
+                .body(buildErrorResponse(
+                        ErrorCode.INVALID_REQUEST,
+                        List.of("Invalid value for parameter: " + exception.getName())));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        log.warn("Invalid request body at [{}]: {}", request.getRequestURI(), ex.getMessage());
+
+        return ResponseEntity
+                .badRequest()
+                .body(buildErrorResponse(ErrorCode.INVALID_REQUEST, List.of("Invalid request body")));
+    }
+
     // Các lỗi chưa định nghĩa trong AppException sẽ được xử lý ở đây
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnknownException(
@@ -158,4 +190,5 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
 }

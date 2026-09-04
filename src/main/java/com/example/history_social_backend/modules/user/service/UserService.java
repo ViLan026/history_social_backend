@@ -68,20 +68,20 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserCreationRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail().trim())) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
         Set<Role> roles = Set.of(roleService.findRoleByName(AppConstants.USER_ROLE));
 
         User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail().trim())
+                .password(passwordEncoder.encode(request.getPassword().trim()))
                 .status(AccountStatus.ACTIVE)
-                .roles(roles) // Assign default role(s)
+                .roles(roles)
                 .build();
 
-        String generatedUsername = generateRandomUsername(request.getEmail());
+        String generatedUsername = generateRandomUsername(request.getEmail().trim());
 
         Profile profile = Profile.builder()
                 .user(user)
@@ -99,17 +99,15 @@ public class UserService {
         // Lấy phần tên trước ký tự '@'
         String baseName = email.substring(0, email.indexOf("@"));
 
-        // Loại bỏ các ký tự đặc biệt (dấu chấm, gạch ngang...), chỉ giữ lại chữ cái và
-        // số
+        // Loại bỏ các ký tự chỉ giữ lại chữ cái và số
         baseName = baseName.replaceAll("[^a-zA-Z0-9]", "");
 
-        // Đảm bảo baseName không bị rỗng sau khi filter (trường hợp email đặc biệt)
         if (baseName.isEmpty()) {
             baseName = "user";
         }
 
         String username = baseName;
-        int maxTries = 5; // Giới hạn số lần thử để tránh vòng lặp vô tận
+        int maxTries = 3; // Giới hạn số lần thử để tránh vòng lặp vô tận
         int count = 0;
 
         // Kiểm tra xem username đã tồn tại trong Database chưa
@@ -120,7 +118,7 @@ public class UserService {
             count++;
         }
 
-        // Trong trường hợp thử 5 lần vẫn trùng, dùng luôn UUID đầy đủ
+        // Trong trường hợp thử 5 lần vẫn trùng, dùng UUID
         if (profileRepository.existsByUsername(username)) {
             username = baseName + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         }
@@ -151,7 +149,7 @@ public class UserService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword().trim())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 

@@ -19,12 +19,12 @@ public final class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         // Kiểm tra xem Principal có đúng là object Jwt không
         if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         return jwt;
@@ -36,7 +36,7 @@ public final class SecurityUtils {
         String idStr = jwt.getClaimAsString("id");
 
         if (idStr == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
         return UUID.fromString(idStr);
     }
@@ -53,10 +53,10 @@ public final class SecurityUtils {
     public static boolean hasRole(String roleName) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) {
-            System.out.println("Authorities: null | Checking for role: " + roleName);
+            // System.out.println("Authorities: null | Checking for role: " + roleName);
             return false;
         }
-        System.out.println("Authorities: " + authentication.getAuthorities() + " | Checking for role: " + roleName);
+        // System.out.println("Authorities: " + authentication.getAuthorities() + " | Checking for role: " + roleName);
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(authority -> authority.equals(roleName));

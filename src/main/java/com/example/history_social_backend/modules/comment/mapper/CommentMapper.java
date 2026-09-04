@@ -4,7 +4,8 @@ import com.example.history_social_backend.modules.comment.domain.Comment;
 import com.example.history_social_backend.modules.comment.dto.CommentResponse;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+
 public interface CommentMapper {
 
     CommentResponse toResponse(Comment comment);

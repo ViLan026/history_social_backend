@@ -65,6 +65,7 @@ public class PostService {
     // Save → Publish event
 
     public PostResponse createPost(PostCreationRequest request, List<MultipartFile> files) {
+        log.info("CREATE POST request status = {}", request.getStatus());
 
         UUID authorId = SecurityUtils.getCurrentUserId();
         // Service tự quyết định folder structure
@@ -111,7 +112,8 @@ public class PostService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .authorId(authorId)
-                .status(request.getStatus())
+                // .status(request.getStatus())
+                .status(request.getStatus() != null ? request.getStatus() : PostStatus.DRAFT)
                 .build();
 
         // media

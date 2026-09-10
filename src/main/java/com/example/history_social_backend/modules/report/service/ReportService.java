@@ -221,12 +221,12 @@ public class ReportService {
 
         Report updatedReport = reportRepository.save(report);
 
-        log.info(
-                "Admin {} changed report {} status from {} to {}",
-                adminUserId,
-                reportId,
-                oldStatus,
-                newStatus);
+        // log.info(
+        //         "Admin {} changed report {} status from {} to {}",
+        //         adminUserId,
+        //         reportId,
+        //         oldStatus,
+        //         newStatus);
 
         return reportMapper.toReportResponse(updatedReport);
     }

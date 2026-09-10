@@ -15,11 +15,11 @@ public class UserUpdateRequest {
     // Username thường có quy tắc: chỉ chứa chữ, số, dấu chấm, dấu gạch dưới, không
     // có khoảng trắng
     @Size(min = 3, max = 30, message = "USERNAME_INVALID_LENGTH")
-    @Pattern(regexp = "^[a-zA-Z0-9._ ]+$", message = "USERNAME_INVALID_FORMAT")
+    @Pattern(regexp = "^[a-zA-Z0-9._\\s]+$", message = "USERNAME_INVALID_FORMAT")
     String displayName;
 
     @Size(min = 3, max = 30, message = "USERNAME_INVALID_LENGTH")
-    @Pattern(regexp = "^[a-zA-Z0-9._ ]+$", message = "USERNAME_INVALID_FORMAT")
+    @Pattern(regexp = "^[a-zA-Z0-9._\\s]+$", message = "USERNAME_INVALID_FORMAT")
     String username; 
 
     @Pattern(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "EMAIL_INVALID_FORMAT")

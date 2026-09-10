@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentRequest {
-    @NotNull
+    @NotNull(message = "Post ID không được để trống")
     UUID postId;
 
     UUID parentId;

@@ -38,7 +38,7 @@ public class AiServiceClient {
             throw new AppException(ErrorCode.INVALID_COMMENT_CONTENT);
         }
 
-        System.out.printf("Calling HSD FastAPI with text=%s%n", request.getText());
+        System.out.printf("Calling HSD FastAPI with text=%.20s%n", request.getText());
 
         return aiWebClient.post()
                 .uri("/hate-speech/detect")

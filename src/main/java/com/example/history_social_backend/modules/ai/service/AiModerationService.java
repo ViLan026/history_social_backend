@@ -26,7 +26,7 @@ public class AiModerationService {
     }
 
     public AiHateSpeechResponse detectCommentHateSpeech(String content) {
-        System.out.printf("Calling HSD FastAPI with text=%s%n", content);
+        System.out.printf("Calling HSD FastAPI with text=%.20s%n", content);
         return aiServiceClient.detectHateSpeech(
                 AiHateSpeechRequest.builder()
                         .text(content)

@@ -1,11 +1,19 @@
-target
 .git
 .github
+
 .idea
 .vscode
+*.iml
+
+target/
 
 .env
 .env.*
+!.env.example
+
+src/main/resources/application-secret.yaml
 **/application-secret.yaml
 
-*.log
+README.md
+HELP.md
+

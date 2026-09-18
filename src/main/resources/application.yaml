@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/history_social}
-    username: ${DATABASE_USERNAME:postgres}
+    username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
@@ -38,19 +38,17 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 
+jwt:
+  secret: ${JWT_SECRET}
+  valid-duration: ${JWT_VALID_DURATION:3600000}
+  refresh-duration: ${JWT_REFRESH_DURATION:604800000}
 
 
-messaging:
-  redis:
-    stream:
-      name: social-events-stream
-      consumer-group: notification-consumer-group
-      consumer-name: notification-consumer-${random.uuid}
-      batch-size: 10
-      poll-timeout: 2000
-      pending-messages-check-interval: 60000
-      max-retry-count: 5
-      claim-min-idle-time: 300000
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
 
 
 ai:

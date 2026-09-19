@@ -329,3 +329,153 @@ CREATE TABLE comment_hate_speech_results (
 	CONSTRAINT comment_hate_speech_results_pkey PRIMARY KEY (id),
 	CONSTRAINT fk_comment_hate_speech_results_comment FOREIGN KEY (comment_id) REFERENCES "comments"(id) ON DELETE CASCADE
 );
+
+
+
+BEGIN;
+
+-- =========================
+-- PROFILE -> USER
+-- =========================
+ALTER TABLE profiles
+DROP CONSTRAINT fk_profiles_user;
+
+ALTER TABLE profiles
+ADD CONSTRAINT fk_profiles_user
+FOREIGN KEY (user_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- COMMENT -> USER
+-- =========================
+ALTER TABLE comments
+DROP CONSTRAINT fk_comments_author;
+
+ALTER TABLE comments
+ADD CONSTRAINT fk_comments_author
+FOREIGN KEY (author_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- USER_ROLES
+-- =========================
+ALTER TABLE user_roles
+DROP CONSTRAINT fk_user_roles_user;
+
+ALTER TABLE user_roles
+ADD CONSTRAINT fk_user_roles_user
+FOREIGN KEY (user_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
+ALTER TABLE user_roles
+DROP CONSTRAINT fk_user_roles_role;
+
+ALTER TABLE user_roles
+ADD CONSTRAINT fk_user_roles_role
+FOREIGN KEY (role_id)
+REFERENCES roles(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- ROLE_PERMISSIONS
+-- =========================
+ALTER TABLE role_permissions
+DROP CONSTRAINT fklcogaoj9yxsyof64a420c8qrq;
+
+ALTER TABLE role_permissions
+ADD CONSTRAINT fk_role_permissions_permission
+FOREIGN KEY (permission_id)
+REFERENCES app_permissions(id)
+ON DELETE CASCADE;
+
+ALTER TABLE role_permissions
+DROP CONSTRAINT fkn5fotdgk8d1xvo8nav9uv3muc;
+
+ALTER TABLE role_permissions
+ADD CONSTRAINT fk_role_permissions_role
+FOREIGN KEY (role_id)
+REFERENCES roles(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- POST_MEDIA -> POST
+-- =========================
+ALTER TABLE post_media
+DROP CONSTRAINT fk1urcum9dtf0vgul7k405f4r2d;
+
+ALTER TABLE post_media
+ADD CONSTRAINT fk_post_media_post
+FOREIGN KEY (post_id)
+REFERENCES posts(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- POST_SOURCES -> POST
+-- =========================
+ALTER TABLE post_sources
+DROP CONSTRAINT fk289rw3fxvdo8cstdo7r7ytclf;
+
+ALTER TABLE post_sources
+ADD CONSTRAINT fk_post_sources_post
+FOREIGN KEY (post_id)
+REFERENCES posts(id)
+ON DELETE CASCADE;
+
+
+-- =========================
+-- POST_TAGS
+-- =========================
+ALTER TABLE post_tags
+DROP CONSTRAINT fkkifam22p4s1nm3bkmp1igcn5w;
+
+ALTER TABLE post_tags
+ADD CONSTRAINT fk_post_tags_post
+FOREIGN KEY (post_id)
+REFERENCES posts(id)
+ON DELETE CASCADE;
+
+ALTER TABLE post_tags
+DROP CONSTRAINT fkm6cfovkyqvu5rlm6ahdx3eavj;
+
+ALTER TABLE post_tags
+ADD CONSTRAINT fk_post_tags_tag
+FOREIGN KEY (tag_id)
+REFERENCES tags(id)
+ON DELETE CASCADE;
+
+
+
+ALTER TABLE reports
+DROP CONSTRAINT fk_reports_reporter;
+
+ALTER TABLE reports
+ADD CONSTRAINT fk_reports_reporter
+FOREIGN KEY (reporter_id)
+REFERENCES users(id)
+ON DELETE CASCADE;
+
+
+ALTER TABLE reports
+DROP CONSTRAINT fk_reports_reviewer;
+
+ALTER TABLE reports
+ADD CONSTRAINT fk_reports_reviewer
+FOREIGN KEY (reviewed_by)
+REFERENCES users(id)
+ON DELETE SET NULL;
+
+
+
+
+COMMIT;
+
+
+
